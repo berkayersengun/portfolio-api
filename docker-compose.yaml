@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres
+    volumes:
+        - ./db:/docker-entrypoint-initdb.d/
+#      - ./data/db:/var/lib/postgresql/data
+#        - .:/app/api
+    environment:
+      - POSTGRES_DB=portfolio
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: pg_isready -U postgres
+  backend:
+    build: .
+    command: gunicorn port.wsgi:application --bind 0.0.0.0:8000
+    # command: python manage.py runserver 0.0.0.0:8000
+    # image: berkayersengun/portfolio-django:0.0.1
+    entrypoint: ./docker-entrypoint.sh
+    volumes:
+    # - ./static:/app/api/static/
+    - static_volume:/app/api/static/
+    ports:
+      - "8001:8000"
+    environment:
+      - POSTGRES_DB=portfolio
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+#      - DJANGO_SETTINGS_MODULE=port.settings
+    depends_on:
+      db:
+        condition: service_healthy
+  frontend:
+    build: ../portfolio-ui/
+    # image: berkayersengun/portfolio-react:0.0.1
+    ports:
+      - "3080:80" #host:container
+#      - "3443:443"
+    volumes:
+    # - ./static:/app/api/static/
+    - static_volume:/app/api/static/
+
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+     static_volume: 
+
+#    volumes:
+#      - ./certbot/www:/var/www/certbot/:ro
+#      - ./certbot/conf/:/etc/nginx/ssl/:ro
+#  certbot:
+#    image: certbot/certbot:arm64v8-latest
+#    volumes:
+#      - ./certbot/www/:/var/www/certbot/:rw
+#      - ./certbot/conf/:/etc/letsencrypt/:rw
+#    command: certonly --webroot -w /var/www/certbot --force-renewal --email berkayersengun@gmail.com -d berkay.crabdance.com --agree-tos

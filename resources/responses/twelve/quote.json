@@ -1,0 +1,75 @@
+{
+    "tsla": {
+        "symbol": "TSLA",
+        "name": "Tesla Inc",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "datetime": "2022-01-26",
+        "open": "952.42999",
+        "high": "972.00000",
+        "low": "935.45001",
+        "close": "935.45001",
+        "volume": "28670970",
+        "previous_close": "918.40002",
+        "change": "17.04999",
+        "percent_change": "1.85649",
+        "average_volume": "29790887",
+        "fifty_two_week": {
+            "low": "539.48999",
+            "high": "1243.48999",
+            "low_change": "395.96002",
+            "high_change": "-308.03998",
+            "low_change_percent": "73.39525",
+            "high_change_percent": "-24.77221",
+            "range": "539.489990 - 1243.489990"
+        }
+    },
+    "BTC/EUR:kraken": {
+        "symbol": "BTC/EUR",
+        "name": "Bitcoin Euro",
+        "exchange": "Kraken",
+        "datetime": "2022-01-26",
+        "open": "32731.69922",
+        "high": "34510.39844",
+        "low": "32386.00000",
+        "close": "33042.30078",
+        "previous_close": "32731.59961",
+        "change": "310.70117",
+        "percent_change": "0.94924",
+        "average_volume": "0",
+        "fifty_two_week": {
+            "low": "24269.50000",
+            "high": "59630.00000",
+            "low_change": "8772.80078",
+            "high_change": "-26587.69922",
+            "low_change_percent": "36.14743",
+            "high_change_percent": "-44.58779",
+            "range": "24269.500000 - 59630.000000"
+        }
+    },
+    "qqq": {
+        "symbol": "QQQ",
+        "name": "Invesco QQQ Trust",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "datetime": "2022-01-26",
+        "open": "353.22000",
+        "high": "356.23999",
+        "low": "340.78000",
+        "close": "345.06000",
+        "volume": "119116434",
+        "previous_close": "345.10999",
+        "change": "-0.04999",
+        "percent_change": "-0.01448",
+        "average_volume": "104213193",
+        "fifty_two_week": {
+            "low": "297.45001",
+            "high": "408.70999",
+            "low_change": "47.60999",
+            "high_change": "-63.64999",
+            "low_change_percent": "16.00605",
+            "high_change_percent": "-15.57339",
+            "range": "297.450012 - 408.709991"
+        }
+    }
+}

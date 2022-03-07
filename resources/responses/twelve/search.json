@@ -1,0 +1,149 @@
+{
+    "data": [
+        {
+            "symbol": "QQQ",
+            "instrument_name": "Invesco QQQ Trust",
+            "exchange": "NASDAQ",
+            "exchange_timezone": "America/New_York",
+            "instrument_type": "ETF",
+            "country": "United States",
+            "currency": "USD"
+        },
+        {
+            "symbol": "QQQ",
+            "instrument_name": "Invesco QQQ Trust, Series 1",
+            "exchange": "BMV",
+            "exchange_timezone": "America/Mexico_City",
+            "instrument_type": "ETF",
+            "country": "Mexico",
+            "currency": "MXN"
+        },
+        {
+            "symbol": "QQQ3",
+            "instrument_name": "WisdomTree NASDAQ 100 3x Daily Leveraged",
+            "exchange": "MTA",
+            "exchange_timezone": "Europe/Rome",
+            "instrument_type": "ETF",
+            "country": "Italy",
+            "currency": "EUR"
+        },
+        {
+            "symbol": "QQQE",
+            "instrument_name": "Direxion NASDAQ-100 Equal Weighted Index Shares",
+            "exchange": "NYSE",
+            "exchange_timezone": "America/New_York",
+            "instrument_type": "ETF",
+            "country": "United States",
+            "currency": "USD"
+        },
+        {
+            "symbol": "QQQJ",
+            "instrument_name": "Invesco NASDAQ Next Gen 100 ETF",
+            "exchange": "NASDAQ",
+            "exchange_timezone": "America/New_York",
+            "instrument_type": "ETF",
+            "country": "United States",
+            "currency": "USD"
+        },
+        {
+            "symbol": "QQQM",
+            "instrument_name": "Invesco NASDAQ 100 ETF",
+            "exchange": "NASDAQ",
+            "exchange_timezone": "America/New_York",
+            "instrument_type": "ETF",
+            "country": "United States",
+            "currency": "USD"
+        },
+        {
+            "symbol": "QQQS",
+            "instrument_name": "WisdomTree NASDAQ 100 3x Daily Short",
+            "exchange": "LSE",
+            "exchange_timezone": "Europe/London",
+            "instrument_type": "ETF",
+            "country": "United Kingdom",
+            "currency": "USD"
+        },
+        {
+            "symbol": "QQQX",
+            "instrument_name": "Nuveen NASDAQ 100 Dynamic Overwrite Fund",
+            "exchange": "NASDAQ",
+            "exchange_timezone": "America/New_York",
+            "instrument_type": "Trust",
+            "country": "United States",
+            "currency": "USD"
+        },
+        {
+            "symbol": "QQQ210R.DC018",
+            "instrument_name": "BBVA BANCOMER S.A. C/WTS 26/10/",
+            "exchange": "BMV",
+            "exchange_timezone": "America/Mexico_City",
+            "instrument_type": "Common Stock",
+            "country": "Mexico",
+            "currency": "MXN"
+        },
+        {
+            "symbol": "PSQ",
+            "instrument_name": "ProShares Short QQQ",
+            "exchange": "NYSE",
+            "exchange_timezone": "America/New_York",
+            "instrument_type": "ETF",
+            "country": "United States",
+            "currency": "USD"
+        },
+        {
+            "symbol": "QLD",
+            "instrument_name": "ProShares Ultra QQQ",
+            "exchange": "BMV",
+            "exchange_timezone": "America/Mexico_City",
+            "instrument_type": "ETF",
+            "country": "Mexico",
+            "currency": "MXN"
+        },
+        {
+            "symbol": "SQQQ",
+            "instrument_name": "ProShares UltraPro Short QQQ",
+            "exchange": "NASDAQ",
+            "exchange_timezone": "America/New_York",
+            "instrument_type": "ETF",
+            "country": "United States",
+            "currency": "USD"
+        },
+        {
+            "symbol": "QID",
+            "instrument_name": "ProShares UltraShort QQQ",
+            "exchange": "NYSE",
+            "exchange_timezone": "America/New_York",
+            "instrument_type": "ETF",
+            "country": "United States",
+            "currency": "USD"
+        },
+        {
+            "symbol": "TQQQ",
+            "instrument_name": "ProShares UltraPro QQQ",
+            "exchange": "NASDAQ",
+            "exchange_timezone": "America/New_York",
+            "instrument_type": "ETF",
+            "country": "United States",
+            "currency": "USD"
+        },
+        {
+            "symbol": "QLD",
+            "instrument_name": "ProShares Ultra QQQ",
+            "exchange": "NYSE",
+            "exchange_timezone": "America/New_York",
+            "instrument_type": "ETF",
+            "country": "United States",
+            "currency": "USD"
+        },
+        {
+            "symbol": "QQC F",
+            "instrument_name": "Invesco QQQ Index ETF",
+            "exchange": "TSX",
+            "exchange_timezone": "America/Toronto",
+            "instrument_type": "ETF",
+            "country": "Canada",
+            "currency": "CAD"
+        }
+    ],
+    "status": "ok"
+}
