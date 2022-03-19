@@ -4,7 +4,9 @@ from rest_framework import routers
 
 from accounts.views import AccountView
 
-router = routers.DefaultRouter(trailing_slash=False)
+# router = routers.DefaultRouter(trailing_slash=False)
+from holdings.urls import router
+
 router.register('accounts', AccountView)
 urlpatterns = [
     # path('drf/', include('rest_framework.urls')),

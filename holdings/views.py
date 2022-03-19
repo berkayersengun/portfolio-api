@@ -332,7 +332,7 @@ class PortfolioViewSet(viewsets.ReadOnlyModelViewSet):
 
     def retrieve(self, request, **kwargs):
         holdings_data = get_holding_data(request.user)
-        holdings_data.sort(key=lambda holding: holding.get('symbol'))
+        holdings_data.sort(key=lambda holding: holding['average'].value.current, reverse=True)
         overview = get_overview_data(holdings_data, request.user.username)
         # overview = {}
         portfolio = {'holdings_data': holdings_data, 'overview': overview, 'user': request.user.username,
@@ -348,48 +348,3 @@ class SearchViewSet(viewsets.ReadOnlyModelViewSet):
         for search in search_list:
             datas.append(SearchSerializer(search).data)
         return Response(data=datas, status=status.HTTP_200_OK)
-
-
-example = {
-    "holdings": {
-        "crypto": [
-            {
-                "symbol": "BTC",
-                "exchange": "CCC",
-                "name": "bitcoin",
-                "current_price": 32124,
-                "quantity": 1,
-                "value": 32124
-            }
-        ],
-        "stock": [
-            {
-                "symbol": "BTC",
-                "exchange": "CCC",
-                "name": "bitcoin",
-                "current_price": 32124,
-                "quantity": 1,
-                "value": 32124
-            }
-        ]
-    },
-    "overview": {
-        "current": {
-            "crypto": 300,
-            "stock": 700,
-            "total": 1000
-        },
-        "capital": {
-            "crypto": 250,
-            "stock": 500,
-            "total": 750
-        },
-        "change": {
-            "crypto": 50,
-            "stock": 200,
-            "total": 250,
-            "percentage": 30
-        },
-    },
-    "user": "sevim"
-}

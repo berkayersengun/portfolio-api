@@ -12,6 +12,8 @@ class AccountSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
 
     def create(self, validated_data):
+        if not validated_data['capital']:
+            raise serializers.ValidationError({"capital": 'Capital required'})
         capital_data = validated_data.pop('capital')
         password = validated_data.pop('password')
         account = Account.objects.create(**validated_data)

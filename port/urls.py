@@ -25,7 +25,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('token/', views.obtain_auth_token),
     path('drf/', include('rest_framework.urls')),
-    path('', include('accounts.urls')),
+    path('v1/', include('accounts.urls')),
     path('v1/', include('holdings.urls')),
-
 ]

@@ -2,7 +2,7 @@ import json
 
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
@@ -14,6 +14,14 @@ class AccountView(viewsets.ModelViewSet):
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
     lookup_field = 'username'
+
+    def get_permissions(self):
+        """Returns the permission based on the type of action"""
+
+        if self.action == "create":
+            return [permissions.AllowAny()]
+
+        return [permissions.IsAuthenticated()]
 
 
 class RegisterView(generics.CreateAPIView):
