@@ -179,7 +179,7 @@ def set_average_data(holdings_data_dict):
         current_price = get_average_value(holdings_data['entities'], level1='price', level2='current')
         price = Price(purchase=purchase_price, current=current_price)
         purchase_value = get_average_value(holdings_data['entities'], level1='value', level2='purchase')
-        current_value = get_average_value(holdings_data['entities'], level1='value', level2='current')
+        current_value = sum(entity['value']['current'] for entity in holdings_data['entities'])
         value = Price(purchase=purchase_value, current=current_value)
         quantity = sum([entity.quantity for entity in holdings_data['entities']])
         change_24H_value = sum([entity.change_24H.value for entity in holdings_data['entities']])
