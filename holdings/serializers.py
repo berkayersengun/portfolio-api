@@ -3,6 +3,7 @@ from rest_framework import serializers
 from accounts.choices import Currency, HoldingType
 from accounts.models import Account
 from holdings.models import Holding, Capital
+from services.common_utils import format_decimals
 
 
 class CapitalSerializer(serializers.ModelSerializer):
@@ -75,22 +76,26 @@ class HoldingSerializerForOverview(serializers.ModelSerializer):
 
 
 # Dataclasses
+class CustomDecimalField(serializers.RelatedField):
+    def to_representation(self, value):
+        return format_decimals(value)
+
 
 class PriceSerializer(serializers.Serializer):
-    purchase = serializers.FloatField()
-    current = serializers.FloatField()
+    purchase = CustomDecimalField(read_only=True)
+    current = CustomDecimalField(read_only=True)
 
 
 class ChangeSerializer(serializers.Serializer):
-    value = serializers.FloatField()
-    percentage = serializers.FloatField()
+    value = CustomDecimalField(read_only=True)
+    percentage = CustomDecimalField(read_only=True)
 
 
 class HoldingDataSerializer(serializers.Serializer):
     symbol = serializers.CharField()
     name = serializers.CharField()
     exchange = serializers.CharField()
-    quantity = serializers.FloatField()
+    quantity = CustomDecimalField(read_only=True)
     price = PriceSerializer()
     change_24H = ChangeSerializer()
     gain = ChangeSerializer()
@@ -101,9 +106,9 @@ class HoldingDataSerializer(serializers.Serializer):
 
 
 class SumSerializer(serializers.Serializer):
-    crypto = serializers.FloatField()
-    stock = serializers.FloatField()
-    total = serializers.FloatField()
+    stock = CustomDecimalField(read_only=True)
+    crypto = CustomDecimalField(read_only=True)
+    total = CustomDecimalField(read_only=True)
 
 
 class ChangeOverviewSerializer(serializers.Serializer):

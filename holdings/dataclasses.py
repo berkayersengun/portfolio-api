@@ -1,5 +1,6 @@
 import dataclasses
 import json
+from decimal import Decimal
 
 from accounts.choices import HoldingType, Currency
 
@@ -38,12 +39,12 @@ class Quote(object):
 
 @dataclasses.dataclass
 class Change(object):
-    value: float = 0
-    percentage: float = 0
+    value: Decimal = 0
+    percentage: Decimal = 0
 
-    def __post_init__(self):
-        self.value = convert_float(self.value)
-        self.percentage = convert_float(self.percentage, exp=2)
+    # def __post_init__(self):
+    #     self.value = convert_float(self.value)
+    #     self.percentage = convert_float(self.percentage, exp=2)
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -68,12 +69,8 @@ class Change(object):
 
 @dataclasses.dataclass
 class Price(object):
-    purchase: float
-    current: float
-
-    def __post_init__(self):
-        self.purchase = convert_float(self.purchase)
-        self.current = convert_float(self.current)
+    purchase: Decimal
+    current: Decimal
 
     # for square notation '[]'
     def __getitem__(self, item):
@@ -109,7 +106,7 @@ class HoldingData(object):
     symbol: str
     name: str
     exchange: str
-    quantity: float
+    quantity: Decimal
     price: Price
     change_24H: Change
     gain: Change
@@ -159,14 +156,9 @@ class HoldingsData(object):
 
 @dataclasses.dataclass
 class Sum(object):
-    crypto: float = 0
-    stock: float = 0
-    total: float = 0
-
-    def __post_init__(self):
-        self.crypto = convert_float(self.crypto)
-        self.stock = convert_float(self.stock)
-        self.total = convert_float(self.total)
+    crypto: Decimal = Decimal(0)
+    stock: Decimal = Decimal(0)
+    total: Decimal = Decimal(0)
 
     def __getitem__(self, key):
         return getattr(self, key)

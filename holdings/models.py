@@ -8,8 +8,8 @@ from accounts.choices import Currency, HoldingType
 
 class Capital(models.Model):
     user = models.OneToOneField(accounts.models.Account, on_delete=models.CASCADE, primary_key=True, null=False)
-    crypto = models.IntegerField(default=0)
-    stock = models.IntegerField(default=0)
+    crypto = models.DecimalField(default=0, max_digits=20, decimal_places=8)
+    stock = models.DecimalField(default=0, max_digits=20, decimal_places=8)
 
 
 class Holding(models.Model):
@@ -19,8 +19,14 @@ class Holding(models.Model):
     #         self.YearInSchool.SENIOR,
     #     }
 
-    quantity = models.FloatField(validators=[MinValueValidator(0)], null=False)
-    purchase_price = models.FloatField(validators=[MinValueValidator(0)], null=False)
+    """
+    Numeric(precision, scale)
+    precision = max_digits
+    scale= decimal_places
+    """
+
+    quantity = models.DecimalField(validators=[MinValueValidator(0)], null=False, max_digits=20, decimal_places=8)
+    purchase_price = models.DecimalField(validators=[MinValueValidator(0)], null=False, max_digits=20, decimal_places=8)
     user = models.ForeignKey(accounts.models.Account, models.CASCADE, null=False)
     symbol = models.CharField(max_length=15, null=False)
     currency = models.CharField(max_length=15, choices=Currency.choices, null=False)

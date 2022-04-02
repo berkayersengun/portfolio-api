@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 from rest_framework import status, viewsets
 from rest_framework.exceptions import NotFound
@@ -78,8 +79,8 @@ class HoldingView(viewsets.ModelViewSet):
 def set_holdings_data(holdings_data, holding, quote, eur_usd, user):
     # quantityEach = holding.quantity if holding.action == 'BUY' else -holding.quantity
 
-    current_price = float(quote['regularMarketPrice'])
-    change_24h = float(quote['regularMarketChange'])
+    current_price = Decimal(quote['regularMarketPrice'])
+    change_24h = Decimal(quote['regularMarketChange'])
 
     if quote['currency'] != user.currency:
         current_price = current_price / eur_usd
@@ -116,65 +117,72 @@ def set_holdings_data(holdings_data, holding, quote, eur_usd, user):
     #     holdings_data.stock.append(holding_data)
 
 
+def create_holding_data(holding_query, quote_dict, eur_usd, currency):
+    if holding_query.symbol not in quote_dict:
+        quote = yahoo.quote(holding_query.symbol)[0]
+        quote_dict[holding_query.symbol] = quote
+    # set_holdings_data(holdings_data_list, holding, quote_list[holding.symbol], eur_usd, user)
+    symbol = quote_dict[holding_query.symbol]['symbol']
+    # symbol = symbol.replace('.', '-')
+    current_price = Decimal(quote_dict[symbol]['regularMarketPrice'])
+    change_24h = Decimal(quote_dict[symbol]['regularMarketChange'])
+    purchase_price = holding_query.purchase_price
+    if quote_dict[symbol]['currency'] != currency:
+        current_price = current_price / eur_usd
+        change_24h = change_24h / eur_usd
+    if holding_query.currency != currency:
+        purchase_price = purchase_price / eur_usd
+    price = Price(purchase=purchase_price, current=current_price)
+    value = Price(purchase=price.purchase * holding_query.quantity, current=price.current * holding_query.quantity)
+    change = Change(value=change_24h * holding_query.quantity,
+                    percentage=quote_dict[symbol]['regularMarketChangePercent'])
+    return HoldingData(symbol=symbol,
+                       name=quote_dict[symbol]['shortName'],
+                       exchange=quote_dict[symbol]['fullExchangeName'],
+                       quantity=holding_query.quantity,
+                       price=price,
+                       gain=price.gain(holding_query.quantity),
+                       change_24H=change,
+                       value=value,
+                       date=holding_query.date.strftime("%d-%b-%y, %H:%M"),
+                       type=holding_query.type,
+                       currency=Currency.EUR)
+
+
 def get_holding_data(user):
     holdings_data_dict = {}
     holding_query_set = Holding.objects.filter(user=get_id_from_db(Account, username=user.username))
     # quotes = yahoo.quote(holding_query_set.values_list('symbol', flat=True))
     quote_dict = {}
-    eur_usd = float(yahoo.quote("EURUSD=X")[0]['regularMarketPrice'])
+    eur_usd = Decimal(yahoo.quote("EURUSD=X")[0]['regularMarketPrice'])
     # symbols = set(holding_query_set.values_list('symbol', flat=True))
     for holding_query in holding_query_set:
-        if holding_query.symbol not in quote_dict:
-            quote = yahoo.quote(holding_query.symbol)[0]
-            quote_dict[holding_query.symbol] = quote
-        # set_holdings_data(holdings_data_list, holding, quote_list[holding.symbol], eur_usd, user)
-        symbol = quote_dict[holding_query.symbol]['symbol']
-        # symbol = symbol.replace('.', '-')
-        current_price = float(quote_dict[symbol]['regularMarketPrice'])
-        change_24h = float(quote_dict[symbol]['regularMarketChange'])
-
-        if quote_dict[symbol]['currency'] != user.currency:
-            current_price = current_price / eur_usd
-            change_24h = change_24h / eur_usd
-        if holding_query.currency != user.currency:
-            holding_query.purchase_price = holding_query.purchase_price / eur_usd
-        price = Price(purchase=holding_query.purchase_price, current=current_price)
-        value = Price(purchase=price.purchase * holding_query.quantity, current=price.current * holding_query.quantity)
-        change = Change(value=change_24h * holding_query.quantity,
-                        percentage=quote_dict[symbol]['regularMarketChangePercent'])
-        holding_data = HoldingData(symbol=symbol,
-                                   name=quote_dict[symbol]['shortName'],
-                                   exchange=quote_dict[symbol]['fullExchangeName'],
-                                   quantity=holding_query.quantity,
-                                   price=price,
-                                   gain=price.gain(holding_query.quantity),
-                                   change_24H=change,
-                                   value=value,
-                                   date=holding_query.date.strftime("%d-%b-%y, %H:%M"),
-                                   type=holding_query.type,
-                                   currency=Currency.EUR)
+        holding_data = create_holding_data(holding_query, quote_dict, eur_usd, user.currency)
         # symbols = filter(lambda holding: holding.symbol == symbol, holdings_data)
+        symbol = holding_query.symbol
         if symbol in holdings_data_dict:
             holdings_data_dict[symbol]['entities'].append(holding_data)
             # holdings_data[symbol]['average'] = get_average_data(holdings_data[symbol])
         else:
-            holdings_data_dict[symbol] = {'symbol': symbol,
-                                          'type': holding_query.type,
-                                          'name': quote_dict[symbol]['shortName'],
-                                          'exchange': quote_dict[symbol]['fullExchangeName'],
-                                          'entities': [holding_data]}
+            holdings_data_dict[holding_query.symbol] = {'symbol': symbol, 'type': holding_query.type,
+                                                        'name': quote_dict[symbol]['shortName'],
+                                                        'exchange': quote_dict[symbol]['fullExchangeName'],
+                                                        'entities': [holding_data]}
     set_average_data(holdings_data_dict)
     return list(holdings_data_dict.values())
 
 
 def get_average_value(data, **kwargs):
     if kwargs['level1'] and kwargs['level2']:
-        return sum([entity[kwargs['level1']][kwargs['level2']] for entity in data]) / float(len(data))
-    return sum([entity[kwargs['level1']] for entity in data]) / float(len(data))
+        return sum([entity[kwargs['level1']][kwargs['level2']] for entity in data]) / len(data)
+    return sum([entity[kwargs['level1']] for entity in data]) / len(data)
 
 
 def set_average_data(holdings_data_dict):
     for symbol, holdings_data in holdings_data_dict.items():
+        if len(holdings_data['entities']) == 1:
+            holdings_data['average'] = holdings_data['entities'][0]
+            continue
         purchase_price = get_average_value(holdings_data['entities'], level1='price', level2='purchase')
         current_price = get_average_value(holdings_data['entities'], level1='price', level2='current')
         price = Price(purchase=purchase_price, current=current_price)
@@ -264,8 +272,8 @@ def get_current_totals(holdings_data):
 
 
 def get_totals(holdings_data, price_type):
-    total_stock = 0
-    total_crypto = 0
+    total_stock = Decimal(0)
+    total_crypto = Decimal(0)
     for holding in holdings_data:
         total_crypto = total_crypto + sum(
             [entity['value'][price_type] for entity in holding['entities'] if entity['type'] == HoldingType.CRYPTO])

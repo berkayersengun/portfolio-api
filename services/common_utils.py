@@ -25,3 +25,11 @@ def convert_float(value, **kwargs):
         exponent = 2
 
     return float(Decimal(value).quantize(Decimal(str(pow(10, -exponent))), rounding=ROUND_UP))
+
+
+def format_decimals(num):
+    POINTS = Decimal(10) ** -2
+    if -0.01 <= num <= 0.01:
+        POINTS = Decimal(10) ** -6
+    num = +Decimal(num).quantize(POINTS)
+    return num.to_integral() if num == num.to_integral() else num.normalize()
