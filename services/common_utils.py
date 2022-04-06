@@ -29,6 +29,8 @@ def convert_float(value, **kwargs):
 
 def format_decimals(num):
     POINTS = Decimal(10) ** -2
+    if -0.1 <= num <= 0.1:
+        POINTS = Decimal(10) ** -4
     if -0.01 <= num <= 0.01:
         POINTS = Decimal(10) ** -6
     num = +Decimal(num).quantize(POINTS)
