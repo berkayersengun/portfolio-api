@@ -172,10 +172,10 @@ def get_holding_data(user):
     return list(holdings_data_dict.values())
 
 
-def get_average_value(data, **kwargs):
-    if kwargs['level1'] and kwargs['level2']:
-        return sum([entity[kwargs['level1']][kwargs['level2']] for entity in data]) / len(data)
-    return sum([entity[kwargs['level1']] for entity in data]) / len(data)
+def get_average(data, level1, level2):
+    total_values = sum([entity[level1][level2] * entity['quantity'] for entity in data])
+    total_quantity = sum([entity['quantity'] for entity in data])
+    return total_values / total_quantity
 
 
 def set_average_data(holdings_data_dict):
@@ -183,10 +183,10 @@ def set_average_data(holdings_data_dict):
         if len(holdings_data['entities']) == 1:
             holdings_data['average'] = holdings_data['entities'][0]
             continue
-        purchase_price = get_average_value(holdings_data['entities'], level1='price', level2='purchase')
-        current_price = get_average_value(holdings_data['entities'], level1='price', level2='current')
+        purchase_price = get_average(holdings_data['entities'], level1='price', level2='purchase')
+        current_price = holdings_data['entities'][0]['price']['current']
         price = Price(purchase=purchase_price, current=current_price)
-        purchase_value = get_average_value(holdings_data['entities'], level1='value', level2='purchase')
+        purchase_value = get_average(holdings_data['entities'], level1='value', level2='purchase')
         current_value = sum(entity['value']['current'] for entity in holdings_data['entities'])
         value = Price(purchase=purchase_value, current=current_value)
         quantity = sum([entity.quantity for entity in holdings_data['entities']])
