@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
+from datetime import timedelta
 from pathlib import Path
 
 PROJECT_VERSION = '0.0.1'
@@ -38,13 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework.authtoken',
+    # 'rest_framework.authtoken',
     'holdings',
     'accounts',
     # 'oauth2_provider',
-    # 'rest_framework_simplejwt',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     "corsheaders",
-
 ]
 
 MIDDLEWARE = [
@@ -53,9 +54,13 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    # 'authentication.middleware.CookieMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'port.middleware.AuthorizationMiddleware',
+    # 'port.middleware.AuthMiddleware',
+
 ]
 
 ROOT_URLCONF = 'port.urls'
@@ -159,11 +164,16 @@ if DEBUG:
         ),
         'DEFAULT_AUTHENTICATION_CLASSES': [
             # 'rest_framework.authentication.BasicAuthentication',
-            'rest_framework.authentication.SessionAuthentication',
-            'accounts.auth.TokenAuthentication',
+            # 'accounts.auth.TokenAuthentication',
             # 'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
             # 'rest_framework_simplejwt.authentication.JWTAuthentication',
-
+            'authentication.auth.CustomAuthentication',
+            # jwt auth must come before session auth if not session auth will override error code of jwt auth
+            # jwt returns 401 when token expired
+            # session returns 403 which is incorrect.
+            # 401: token expired
+            # 403: not authenticated
+            'rest_framework.authentication.SessionAuthentication',
         ],
         # 'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning'
     }
@@ -183,7 +193,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.1.5",
     'http://192.168.1.5:3001',
 ]
+
 CSRF_TRUSTED_ORIGINS = ['http://192.168.1.5', 'https://192.168.1.5']
+
+CORS_ALLOW_CREDENTIALS = True  # Allows sending httponly cookies from client
+CSRF_COOKIE_SECURE = True
 
 if DEBUG:
     LOGGING = {
@@ -201,3 +215,33 @@ if DEBUG:
     }
 
 # LOGIN_REDIRECT_URL = '/api/v1/'
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=5),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+
+    'ALGORITHM': 'HS256',
+    # 'SIGNING_KEY': settings.SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    # 'AUTH_HEADER_NAME': 'HTTP_COOKIE',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+
+    'JTI_CLAIM': 'jti',
+
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+
+    # Custom Params
+    'COOKIE_ACCESS': 'access',
+    'COOKIE_REFRESH': 'refresh'
+}

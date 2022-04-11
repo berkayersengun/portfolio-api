@@ -4,10 +4,8 @@ from decimal import Decimal
 
 from accounts.choices import HoldingType, Currency
 
+
 # API Responses
-from services.common_utils import convert_float
-
-
 @dataclasses.dataclass
 class Quote(object):
     symbol: str
@@ -29,42 +27,14 @@ class Quote(object):
                           sort_keys=True, indent=4)
 
 
-# Custom data response classes below
-# @dataclasses.dataclass
-# class Change(object):
-#     change: float
-#     change_24h: float
-#     change_percent_24h: float
-
-
 @dataclasses.dataclass
 class Change(object):
     value: Decimal = 0
     percentage: Decimal = 0
 
-    # def __post_init__(self):
-    #     self.value = convert_float(self.value)
-    #     self.percentage = convert_float(self.percentage, exp=2)
-
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
-
-    # @property
-    # def value(self) -> float:
-    #     return convert_float(self.value)
-    #
-    # @property
-    # def percentage(self):
-    #     return convert_float(self.percentage, exp=2)
-
-    # @value.setter
-    # def value(self, value):
-    #     self.value = value
-    #
-    # @percentage.setter
-    # def percentage(self, value):
-    #     self.percentage = value
 
 
 @dataclasses.dataclass
@@ -75,11 +45,6 @@ class Price(object):
     # for square notation '[]'
     def __getitem__(self, item):
         return getattr(self, item)
-        # return super().__getattribute__(item)
-
-    # for dot notation '.'
-    # def __getattr__(self, attr):
-    #     return getattr(self, attr)
 
     def gain(self, quantity):
         value = (self.current - self.purchase) * quantity
@@ -90,15 +55,6 @@ class Price(object):
         if delta != 0:
             return delta / self.purchase * 100
         return 0
-
-
-# @property
-# def purchase(self):
-#     return self.purchase
-#
-# @property
-# def current(self):
-#     return self.current
 
 
 @dataclasses.dataclass
@@ -117,16 +73,12 @@ class HoldingData(object):
 
     def __post_init__(self):
         self.quantity = self.quantity
-        # self.amount = convert_2_dec(self.amount)
 
     def __getitem__(self, item):
         return getattr(self, item)
 
     def getCurrentValue(self):
         return self.quantity * self.price.current
-
-    # def getChange(self):
-    #     return (self.current_price - self.purchase_price) * self.quantity
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
@@ -142,16 +94,6 @@ class HoldingsData(object):
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
-
-
-# @dataclasses.dataclass
-# class HoldingsData(object):
-#     crypto: list[HoldingData]
-#     stock: list[HoldingData]
-#
-#     def toJSON(self):
-#         return json.dumps(self, default=lambda o: o.__dict__,
-#                           sort_keys=True, indent=4)
 
 
 @dataclasses.dataclass
@@ -224,23 +166,3 @@ class Overview(object):
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
-
-# @dataclasses.dataclass
-# class Search(object):
-#     symbol: str = ''
-#     instrument_name: str = ''
-#     exchange: str = ''
-#     exchange_timezone: str = ''
-#     instrument_type: str = ''
-#     country: str = ''
-#     currency: str = ''
-
-# {
-#     "symbol": "QID",
-#     "instrument_name": "ProShares UltraShort QQQ",
-#     "exchange": "NYSE",
-#     "exchange_timezone": "America/New_York",
-#     "instrument_type": "ETF",
-#     "country": "United States",
-#     "currency": "USD"
-# }
