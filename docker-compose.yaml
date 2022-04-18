@@ -11,6 +11,7 @@ services:
       - POSTGRES_DB=portfolio
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    restart: unless-stopped
     healthcheck:
       test: pg_isready -U postgres
   backend:
@@ -29,6 +30,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
 #      - DJANGO_SETTINGS_MODULE=port.settings
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
@@ -41,7 +43,7 @@ services:
     volumes:
     # - ./static:/app/api/static/
     - static_volume:/app/api/static/
-
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
