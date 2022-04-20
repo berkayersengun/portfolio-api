@@ -21,7 +21,7 @@ class JwtLoginView(TokenObtainPairView):
         max_age_access = settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].seconds
         max_age_refresh = settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].seconds
         setCookie(response, settings.SIMPLE_JWT['COOKIE_ACCESS'], 1)
-        setCookie(response, settings.SIMPLE_JWT['COOKIE_REFRESH'], 1)
+        setCookie(response, settings.SIMPLE_JWT['COOKIE_REFRESH'], 15)
         return response
 
 
