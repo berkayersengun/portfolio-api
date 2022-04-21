@@ -4,9 +4,9 @@ services:
   db:
     image: postgres
     volumes:
-        - ./db:/docker-entrypoint-initdb.d/
-#      - ./data/db:/var/lib/postgresql/data
-#        - .:/app/api
+      - ./db:/docker-entrypoint-initdb.d/
+    #      - ./data/db:/var/lib/postgresql/data
+    #        - .:/app/api
     environment:
       - POSTGRES_DB=portfolio
       - POSTGRES_USER=postgres
@@ -14,6 +14,7 @@ services:
     restart: unless-stopped
     healthcheck:
       test: pg_isready -U postgres
+
   backend:
     build: .
     command: gunicorn port.wsgi:application --bind 0.0.0.0:8000
@@ -21,34 +22,47 @@ services:
     # image: berkayersengun/portfolio-django:0.0.1
     entrypoint: ./docker-entrypoint.sh
     volumes:
-    # - ./static:/app/api/static/
-    - static_volume:/app/api/static/
+      # - ./static:/app/api/static/
+      - static_volume:/app/api/static/
     ports:
       - "8001:8000"
     environment:
       - POSTGRES_DB=portfolio
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-#      - DJANGO_SETTINGS_MODULE=port.settings
+    #      - DJANGO_SETTINGS_MODULE=port.settings
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
+
+  scheduler:
+    build: .
+    entrypoint: ./docker-entrypoint-scheduler.sh
+    environment:
+      - POSTGRES_DB=portfolio
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+
   frontend:
     build: ../portfolio-ui/
     # image: berkayersengun/portfolio-react:0.0.1
     ports:
       - "3080:80" #host:container
-#      - "3443:443"
+    #      - "3443:443"
     volumes:
-    # - ./static:/app/api/static/
-    - static_volume:/app/api/static/
+      # - ./static:/app/api/static/
+      - static_volume:/app/api/static/
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
 volumes:
-     static_volume: 
+  static_volume:
 
 #    volumes:
 #      - ./certbot/www:/var/www/certbot/:ro

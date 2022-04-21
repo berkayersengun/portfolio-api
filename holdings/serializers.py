@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from accounts.choices import Currency, HoldingType
+from accounts.choices import Currency, HoldingType, SnapshotHook
 from accounts.models import Account
 from holdings.models import Holding, Capital
 from services.common_utils import format_decimals
@@ -139,3 +139,10 @@ class SearchSerializer(serializers.Serializer):
     typeDisp = serializers.CharField()
     longname = serializers.CharField(default='')
     exchDisp = serializers.CharField()
+
+
+class PortfolioSnapshotSerializer(serializers.Serializer):
+    user = serializers.CharField()
+    date = serializers.DateTimeField()
+    snapshot_hook = serializers.ChoiceField(choices=SnapshotHook.choices)
+    portfolio = serializers.JSONField()

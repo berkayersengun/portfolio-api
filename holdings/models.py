@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 import accounts.models
-from accounts.choices import Currency, HoldingType
+from accounts.choices import Currency, HoldingType, SnapshotHook
 
 
 class Capital(models.Model):
@@ -40,3 +40,10 @@ class Holding(models.Model):
 
     # TODO add a foreign key for Asset model
     # Create a Asset model and save each asset data in db as template to save holding when querying asset prices
+
+
+class PortfolioSnapshot(models.Model):
+    user = models.ForeignKey(accounts.models.Account, models.CASCADE, null=False)
+    date = models.DateTimeField(auto_now_add=True)
+    snapshot_hook = models.CharField(max_length=10, choices=SnapshotHook.choices, null=False)
+    portfolio = models.JSONField()

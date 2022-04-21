@@ -11,3 +11,9 @@ class Currency(models.TextChoices):
 class HoldingType(models.TextChoices):
     STOCK = 'stock', _('stock')
     CRYPTO = 'crypto', _('crypto')
+
+
+class SnapshotHook(models.TextChoices):
+    DAILY = 'daily', _('daily')
+    ON_UPDATE = 'on_update', _('on_update')
+    MANUAL = 'manual', _('manual')
