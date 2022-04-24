@@ -1,3 +1,6 @@
+from django.core import exceptions
+from django.middleware.csrf import CsrfViewMiddleware
+from rest_framework.authentication import CSRFCheck
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -12,6 +15,22 @@ from port import settings
 #     Authorization: Token 401f7ac837da42b97f613d789819ff93537bee6a
 #     """
 #     authentication.TokenAuthentication.keyword = 'Bearer'
+
+# def enforce_csrf(self, request):
+#     """
+#     Enforce CSRF validation for session based authentication.
+#     """
+#
+#     def dummy_get_response(request):  # pragma: no cover
+#         return None
+#
+#     check = CSRFCheck(dummy_get_response)
+#     # populates request.META['CSRF_COOKIE'], which is used in process_view()
+#     check.process_request(request)
+#     reason = check.process_view(request, None, (), {})
+#     if reason:
+#         # CSRF failed, bail with explicit error message
+#         raise exceptions.PermissionDenied(f'CSRF Failed: {reason}')
 
 
 # def enforce_csrf(request):
@@ -53,7 +72,7 @@ def refreshToken(request):
 class CustomAuthentication(JWTAuthentication):
     def authenticate(self, request):
         header = self.get_header(request)
-
+        # enforce_csrf(request)
         if header is None:  # Check cookies first (UI)
             raw_token = request.COOKIES.get(settings.SIMPLE_JWT['COOKIE_ACCESS']) or None
         else:

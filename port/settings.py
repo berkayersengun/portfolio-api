@@ -13,6 +13,9 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from services.common_utils import get_profile
+from services.enums import Profile
+
 PROJECT_VERSION = '0.0.1'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -71,6 +74,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
+        # 'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -78,7 +82,13 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # export env variables to be used in django templates
+                # 'context_processors.export_vars',
+
             ],
+            # 'libraries': {
+            #     'filters': 'templates.templatetags.tags',
+            # }
         },
     },
 ]
@@ -149,8 +159,12 @@ USE_TZ = True
 
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-if os.environ.get('HOSTNAME'):
+
+if get_profile() is Profile.PROD:
     STATIC_URL = '/api/static/'
+    LOGIN_REDIRECT_URL = '/api/v1/accounts'
+    #     LOGIN_URL = '/api/drf/login/'
+    # LOGOUT_REDIRECT_URL = ""
 else:
     STATIC_URL = '/static/'
 
@@ -192,14 +206,23 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:8000",
+    "http://127.0.0.1:8001",
     "http://192.168.1.5",
     'http://192.168.1.5:3001',
 ]
 
-CSRF_TRUSTED_ORIGINS = ['http://192.168.1.5', 'https://192.168.1.5']
+CSRF_TRUSTED_ORIGINS = [
+    'http://192.168.1.5',
+    'https://192.168.1.5',
+    'https://berkay.jumpingcrab.com',
+    'http://berkay.jumpingcrab.com'
+]
 
-CORS_ALLOW_CREDENTIALS = True  # Allows sending httponly cookies from client
-CSRF_COOKIE_SECURE = True
+# Allows sending httponly cookies from client
+CORS_ALLOW_CREDENTIALS = True
+
+# Allows sending csrf cookie only with https, will not work over http if this setting is true
+# CSRF_COOKIE_SECURE = True
 
 if DEBUG:
     LOGGING = {
@@ -216,7 +239,6 @@ if DEBUG:
         },
     }
 
-# LOGIN_REDIRECT_URL = '/api/v1/'
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=15),

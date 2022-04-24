@@ -13,13 +13,29 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 
+from services.common_utils import get_profile
+from services.enums import Profile
+
+if get_profile() is Profile.PROD:
+    drf_path = 'api/drf/'
+else:
+    drf_path = 'drf/'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('drf/', include('rest_framework.urls')),
+    # path('drf/login/', JwtLoginView.as_view(), name='token_obtain_pair'),
+    # path('drf/logout/', views.LogoutView.as_view(), name='logout'),
+    # path('drf/login/', CustomLoginView.as_view(template_name='rest_framework/login.html'), name='login'),
     path('v1/', include('accounts.urls')),
     path('v1/', include('holdings.urls')),
     path('auth/', include('authentication.urls')),
 ]
+
+if get_profile() is Profile.PROD:
+    urlpatterns = [
+        path('api/', include(urlpatterns))
+    ]

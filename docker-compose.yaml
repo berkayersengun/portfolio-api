@@ -17,10 +17,10 @@ services:
 
   backend:
     build: .
-    command: gunicorn port.wsgi:application --bind 0.0.0.0:8000
+#    command: gunicorn port.wsgi:application --bind 0.0.0.0:8000
     # command: python manage.py runserver 0.0.0.0:8000
     # image: berkayersengun/portfolio-django:0.0.1
-    entrypoint: ./docker-entrypoint.sh
+#    entrypoint: ./docker-entrypoint.sh
     volumes:
       # - ./static:/app/api/static/
       - static_volume:/app/api/static/

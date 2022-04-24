@@ -22,6 +22,11 @@ server {
         proxy_cache_bypass $http_upgrade;
         proxy_redirect off;
     }
+
+    location /nextcloud {
+        return 301 https://$host$request_uri;
+    }
+
 }
 
 server {

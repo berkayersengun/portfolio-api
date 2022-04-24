@@ -24,7 +24,6 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
 
-
 # class CookieTokenObtainPairView(TokenObtainPairView):
 #     def finalize_response(self, request, response, *args, **kwargs):
 #         if response.data.get('refresh'):
@@ -76,3 +75,11 @@ class RegisterView(generics.CreateAPIView):
 #         {"errors": "Invalid credentials"},
 #         status=400,
 #     )
+# class CustomLoginView(LoginView):
+#     template_name = 'login.html'
+#
+#     def get_redirect_url(self):
+#         if get_profile() is Profile.PROD:
+#             self.request.POST.next = '/api/v1/holdings'
+#
+#         return super().get_redirect_url()

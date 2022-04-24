@@ -209,7 +209,8 @@ def get_overview_data(holdings_data, username):
 
 def getPortfolio(user):
     holdings_data = get_holding_data(user)
-    holdings_data.sort(key=lambda holding: holding['average'].value.current, reverse=True)
+    # TODO move all sorting to the api from UI
+    # holdings_data.sort(key=lambda holding: holding['average'].value.current, reverse=True)
     overview = get_overview_data(holdings_data, user.username)
     return {'holdings_data': holdings_data,
             'overview': overview,

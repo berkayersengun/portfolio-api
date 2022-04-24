@@ -1,4 +1,7 @@
+import os
 from decimal import Decimal, ROUND_UP
+
+from services.enums import Profile
 
 
 def get_id_from_db(clazz, **kwargs):
@@ -35,3 +38,11 @@ def format_decimals(num):
         POINTS = Decimal(10) ** -6
     num = +Decimal(num).quantize(POINTS)
     return num.to_integral() if num == num.to_integral() else num.normalize()
+
+
+def get_profile():
+    profile = os.getenv('PROFILE')
+    if profile:
+        return Profile(profile)
+    else:
+        return Profile.DEV
