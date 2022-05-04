@@ -16,8 +16,8 @@ services:
       test: pg_isready -U postgres
 
   backend:
-    build: .
-#    command: gunicorn port.wsgi:application --bind 0.0.0.0:8000
+    build: https://github.com/berkayersengun/portfolio-api.git#main
+    # command: gunicorn port.wsgi:application --bind 0.0.0.0:8000
     # command: python manage.py runserver 0.0.0.0:8000
     # image: berkayersengun/portfolio-django:0.0.1
 #    entrypoint: ./docker-entrypoint.sh
@@ -37,7 +37,7 @@ services:
         condition: service_healthy
 
   scheduler:
-    build: .
+    build: https://github.com/berkayersengun/portfolio-api.git#main
     entrypoint: ./docker-entrypoint-scheduler.sh
     environment:
       - POSTGRES_DB=portfolio
@@ -49,7 +49,8 @@ services:
         condition: service_healthy
 
   frontend:
-    build: ../portfolio-ui/
+#    build: ../portfolio-ui/
+    build: https://github.com/berkayersengun/portfolio-ui.git#main
     # image: berkayersengun/portfolio-react:0.0.1
     ports:
       - "3080:80" #host:container
