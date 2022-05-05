@@ -24,6 +24,9 @@ services:
     volumes:
       # - ./static:/app/api/static/
       - static_volume:/app/api/static/
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+#      - timezone_volume:/etc/timezone
     ports:
       - "8001:8000"
     environment:
@@ -47,6 +50,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
 
   frontend:
 #    build: ../portfolio-ui/
@@ -62,8 +68,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
 volumes:
   static_volume:
+#  timezone_volume:
+#    driver: local
+#    driver_opts:
+#      type: none
+##      o: bind
+#      device: /etc/timezone
 
 #    volumes:
 #      - ./certbot/www:/var/www/certbot/:ro

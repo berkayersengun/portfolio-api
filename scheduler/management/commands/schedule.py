@@ -38,7 +38,7 @@ def add_cleanup_scheduler(scheduler):
     scheduler.add_job(
         delete_old_job_executions,
         trigger=CronTrigger(
-            day_of_week="mon", hour="23", minute="00"
+            day_of_week="mon", hour="00", minute="00"
         ),  # Midnight on Monday, before start of the next work week.
         id="delete_old_job_executions",
         max_instances=1,
@@ -55,7 +55,7 @@ def schedule_create_snapshots():
     scheduler.add_job(
         create_snapshots,
         args=[SnapshotHook.DAILY],
-        trigger=CronTrigger(hour='23', minute='00'),  # TODO fix timezone: currently, 23:00 -> corresponding to 00:00
+        trigger=CronTrigger(hour='00', minute='00'),
         # trigger=CronTrigger(second="*/10"),  # Every 10 seconds
         id="createSnapshots",  # The `id` assigned to each job MUST be unique
         max_instances=1,
