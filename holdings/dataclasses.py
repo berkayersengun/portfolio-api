@@ -157,7 +157,7 @@ class Overview(object):
         if change_base is not None:
             delta = self.__calculateValue(attribute, change_base)
             if self[change_base][attribute] != 0:
-                return delta / self[change_base][attribute] * 100
+                return delta / self.current[attribute] * 100
             return 0
         if daily_change is not None and daily_change != 0:
             return daily_change / (self.current[attribute] - daily_change) * 100
