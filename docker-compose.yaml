@@ -5,6 +5,7 @@ services:
     image: postgres
     volumes:
       - ./db:/docker-entrypoint-initdb.d/
+      - /media/myCloudDrive/pg-data:/var/lib/postgresql/data
     #      - ./data/db:/var/lib/postgresql/data
     #        - .:/app/api
     environment:
@@ -20,13 +21,13 @@ services:
     # command: gunicorn port.wsgi:application --bind 0.0.0.0:8000
     # command: python manage.py runserver 0.0.0.0:8000
     # image: berkayersengun/portfolio-django:0.0.1
-#    entrypoint: ./docker-entrypoint.sh
+    #    entrypoint: ./docker-entrypoint.sh
     volumes:
       # - ./static:/app/api/static/
       - static_volume:/app/api/static/
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-#      - timezone_volume:/etc/timezone
+    #      - timezone_volume:/etc/timezone
     ports:
       - "8001:8000"
     environment:
@@ -55,7 +56,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   frontend:
-#    build: ../portfolio-ui/
+    #    build: ../portfolio-ui/
     build: https://github.com/berkayersengun/portfolio-ui.git#main
     # image: berkayersengun/portfolio-react:0.0.1
     ports:
@@ -71,6 +72,7 @@ services:
 
 volumes:
   static_volume:
+  # data-volume:
 #  timezone_volume:
 #    driver: local
 #    driver_opts:

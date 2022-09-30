@@ -88,7 +88,6 @@ server {
         proxy_cache_bypass $http_upgrade;
         # proxy_redirect off;
         # proxy_redirect "http://localhost:3080/" https://berkay.jumpingcrab.com;
-
     }
 
     location = /robots.txt {
