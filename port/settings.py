@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-loohho%)r=djdqf&gv7!1!8kk()*pd5#8ip7%%uq$jq2&2c$=k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend', '192.168.1.5', 'berkay.jumpingcrab.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend', '192.168.2.16', 'berkay.jumpingcrab.com', 'raspberrypi']
 
 # Application definition
 

@@ -1,0 +1,59 @@
+server {
+    listen 80;
+    server_name 192.168.2.16;
+
+    location / {
+        # return 404 $server_addr;
+        proxy_pass "http://localhost:3080/";
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-NginX-Proxy true;
+        proxy_ssl_session_reuse off;
+        proxy_set_header Host $host;
+        # proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_redirect off;
+    }
+}
+
+server {
+    server_name berkay.jumpingcrab.com;
+
+    location /.well-known/acme-challenge {
+        root /var/www/html;
+        # return 404 "jump 80 /well";
+        try_files $uri 405;
+    }
+
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/berkay.jumpingcrab.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/berkay.jumpingcrab.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+  location / {
+        # return 404 "443 /";
+        proxy_pass "http://localhost:3080/";
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-NginX-Proxy true;
+        proxy_ssl_session_reuse off;
+        proxy_set_header Host $http_host;
+        # proxy_set_header  Host $host;
+        proxy_cache_bypass $http_upgrade;
+        # proxy_redirect off;
+        # proxy_redirect "http://localhost:3080/" https://berkay.jumpingcrab.com;
+    }
+}
+
+server {
+    if ($host = berkay.jumpingcrab.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    listen 80;
+    listen [::]:80;
+    server_name berkay.jumpingcrab.com;
+    return 404; # managed by Certbot
+}
