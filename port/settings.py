@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "scheduler",
     "django_apscheduler",
+    'django_filters'
 ]
 
 MIDDLEWARE = [
@@ -146,7 +147,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Europe/Dublin'  # TODO not working
+TIME_ZONE = 'America/Toronto'  # TODO not working
 
 USE_I18N = True
 
@@ -269,3 +270,6 @@ SIMPLE_JWT = {
     'COOKIE_ACCESS': 'access',
     'COOKIE_REFRESH': 'refresh'
 }
+
+# DATETIME_INPUT_FORMATS = [DATE_FORMAT]
+# USE_L10N = False

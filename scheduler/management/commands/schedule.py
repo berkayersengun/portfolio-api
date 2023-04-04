@@ -1,8 +1,9 @@
 import logging
 
+from apscheduler.triggers.interval import IntervalTrigger
 from django.core.management.base import BaseCommand
 
-from scheduler.tasks import create_snapshots
+from scheduler.tasks import create_portfolio_snapshots, create_overview_snapshots
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from django_apscheduler import util
@@ -50,18 +51,28 @@ def add_cleanup_scheduler(scheduler):
 
 
 def schedule_create_snapshots():
-    scheduler = BlockingScheduler(timezone="Europe/Dublin")
+    scheduler = BlockingScheduler(timezone="America/Toronto")
     scheduler.add_jobstore(DjangoJobStore(), "default")
     scheduler.add_job(
-        create_snapshots,
+        create_portfolio_snapshots,
         args=[SnapshotHook.DAILY],
         trigger=CronTrigger(hour='00', minute='00'),
         # trigger=CronTrigger(second="*/10"),  # Every 10 seconds
-        id="createSnapshots",  # The `id` assigned to each job MUST be unique
+        id="createSnapshotsPortfolio",  # The `id` assigned to each job MUST be unique
         max_instances=1,
         replace_existing=True,
     )
-    logger.info("Added daily job: 'createSnapshots'.")
+    logger.info("Added daily job: 'createSnapshotsPortfolio'.")
+    scheduler.add_job(
+        create_overview_snapshots,
+        args=[SnapshotHook.OVERVIEW],
+        # trigger=IntervalTrigger(minutes=30),
+        trigger=CronTrigger(minute='*/30'),
+        id="createSnapshotsOverview",  # The `id` assigned to each job MUST be unique
+        max_instances=1,
+        replace_existing=True,
+    )
+    logger.info("Added daily job: 'createSnapshotsOverview'.")
     add_cleanup_scheduler(scheduler)
     return scheduler
 

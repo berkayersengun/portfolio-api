@@ -1,12 +1,15 @@
-from rest_framework.exceptions import NotFound
-
-from accounts.models import Account
-from accounts.serializers import CapitalSerializerForAccount
-from holdings.dataclasses import HoldingData, Overview, Sum, Price, Change, ChangeOverview
-from accounts.choices import HoldingType, Currency
+import dataclasses
+import decimal
+import json
 from decimal import Decimal
 
-from holdings.models import Holding, Capital
+from rest_framework.exceptions import NotFound
+
+from accounts.choices import HoldingType, Currency
+from accounts.models import Account
+from accounts.serializers import CapitalSerializerForAccount
+from holdings.dataclasses import HoldingData, Overview, Sum, Price, Change, ChangeOverview, Portfolio
+from holdings.models import Holding, Capital, PortfolioSnapshot, OverviewSnapshot
 from services import yahoo
 from services.common_utils import get_id_from_db
 
@@ -172,7 +175,7 @@ def get_totals(holdings_data, price_type):
             [entity['value'][price_type] for entity in holding['entities'] if entity['type'] == HoldingType.CRYPTO])
         total_stock = total_stock + sum(
             [entity['value'][price_type] for entity in holding['entities'] if entity['type'] == HoldingType.STOCK])
-    return Sum(crypto=total_crypto, stock=total_stock, total=total_crypto + total_stock)
+    return Sum(crypto=Decimal(round(total_crypto)), stock=Decimal(round(total_stock)), total=Decimal(round(total_crypto + total_stock)))
 
 
 def get_change_daily(holdings_data):
@@ -207,12 +210,49 @@ def get_overview_data(holdings_data, username):
     return overview
 
 
-def getPortfolio(user):
+def get_portfolio(user):
     holdings_data = get_holding_data(user)
     # TODO move all sorting to the api from UI
     # holdings_data.sort(key=lambda holding: holding['average'].value.current, reverse=True)
     overview = get_overview_data(holdings_data, user.username)
-    return {'holdings_data': holdings_data,
-            'overview': overview,
-            'user': user.username,
-            'currency': user.currency}
+    return Portfolio(holdings_data=holdings_data, overview=overview, user=user.username, currency=user.currency)
+
+
+def is_friday(date):
+    # date = datetime.strptime(date_string, DATE_FORMAT)
+    if date.weekday() == 4:
+        return True, date
+    return False, date
+
+
+class EnhancedJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return str(o)
+        if dataclasses.is_dataclass(o):
+            return dataclasses.asdict(o)
+        return super().default(o)
+
+
+# class EdgeDecoder(json.JSONDecoder):
+#     def __init__(self, *args, **kwargs):
+#         json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+#
+#     def object_hook(self, dct):
+#         if 'Change' in dct:
+#             actor = Actor(dct['Actor']['Name'], dct['Actor']['Age'], '')
+#             movie = Movie(dct['Movie']['Title'], dct['Movie']['Gross'], '', dct['Movie']['Year'])
+#             return Edge(actor, movie)
+#         return dct
+
+def create_snapshots():
+    ports = list(filter(lambda a: a['user'] == 'sevim' or a['user'] == 'berkay', json.load(open('resources/db_backup/snapshots.json'))))
+    for p in ports:
+        user = Account.objects.get(username=p['user'])
+        PortfolioSnapshot.objects.create(user=user, snapshot_hook=p['snapshot_hook'], portfolio=p['portfolio'], date=p['date'])
+
+
+def migrate_portfolio_snapshots():
+    for snapshot in PortfolioSnapshot.objects.all():
+        OverviewSnapshot.objects.create(user=snapshot.user, snapshot_hook=snapshot.snapshot_hook, overview=snapshot.portfolio['overview'],
+                                        date=snapshot.date)

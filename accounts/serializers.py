@@ -1,10 +1,15 @@
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from django.contrib.auth.password_validation import validate_password
 
 from accounts.models import Account
 from holdings.models import Capital
-from holdings.serializers import CapitalSerializerForAccount
+
+
+class CapitalSerializerForAccount(serializers.ModelSerializer):
+    class Meta:
+        model = Capital
+        exclude = ['user']
 
 
 class AccountSerializer(serializers.ModelSerializer):

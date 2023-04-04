@@ -20,10 +20,7 @@ from django.urls import path, include
 from services.common_utils import get_profile
 from services.enums import Profile
 
-if get_profile() is Profile.PROD:
-    drf_path = 'api/drf/'
-else:
-    drf_path = 'drf/'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('drf/', include('rest_framework.urls')),

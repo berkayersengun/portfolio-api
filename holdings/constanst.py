@@ -34,3 +34,6 @@ from django.utils.translation import gettext_lazy as _  # enumeration
 #     (SENIOR, _('Senior')),
 #     (GRADUATE, _('Graduate')),
 # ]
+
+DATE_FORMAT = '%d-%m-%Y'
+DATE_TIME_FORMAT = '%d-%m-%Y %H:%M'

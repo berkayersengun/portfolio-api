@@ -29,5 +29,5 @@
 ## User
 - Update Dynamic with FreeDns at midnight everday
   ```shell
-  0 0 * * * date +\%d-\%m-\%Y::\%H:\%M:\%S >> $HOME/cronlogs/freedns.log && curl https://freedns.afraid.org/dynamic/update.php?TlRseUtSeWtPaGJhT2VvZlJXNldwbFNQOjE5OTY1MDc3 >> $HOME/cronlogs/freedns.log 2>&1
+  0 0 * * * date +\%d-\%m-\%Y::\%H:\%M:\%S >> $HOME/cronlogs/freedns.log && curl "https://freedns.afraid.org/dynamic/update.php?TlRseUtSeWtPaGJhT2VvZlJXNldwbFNQOjE5OTY1MDc3" >> $HOME/cronlogs/freedns.log 2>&1
   ```

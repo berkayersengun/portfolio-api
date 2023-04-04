@@ -1,13 +1,25 @@
 import dataclasses
+import datetime
 import json
 from decimal import Decimal
 
 from accounts.choices import HoldingType, Currency
 
 
+@dataclasses.dataclass
+class BaseDataClass(object):
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
+
+    # for square notation '[]'
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+
 # API Responses
 @dataclasses.dataclass
-class Quote(object):
+class Quote(BaseDataClass):
     symbol: str
     name: str
     exchange: str
@@ -22,29 +34,17 @@ class Quote(object):
     average_volume: str
     currency: str
 
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
+
+@dataclasses.dataclass
+class Change(BaseDataClass):
+    value: Decimal = Decimal(0)
+    percentage: Decimal = Decimal(0)
 
 
 @dataclasses.dataclass
-class Change(object):
-    value: Decimal = 0
-    percentage: Decimal = 0
-
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
-
-
-@dataclasses.dataclass
-class Price(object):
+class Price(BaseDataClass):
     purchase: Decimal
     current: Decimal
-
-    # for square notation '[]'
-    def __getitem__(self, item):
-        return getattr(self, item)
 
     def gain(self, quantity):
         value = (self.current - self.purchase) * quantity
@@ -58,7 +58,7 @@ class Price(object):
 
 
 @dataclasses.dataclass
-class HoldingData(object):
+class HoldingData(BaseDataClass):
     symbol: str
     name: str
     exchange: str
@@ -74,60 +74,49 @@ class HoldingData(object):
     def __post_init__(self):
         self.quantity = self.quantity
 
-    def __getitem__(self, item):
-        return getattr(self, item)
-
     def getCurrentValue(self):
         return self.quantity * self.price.current
 
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
-
 
 @dataclasses.dataclass
-class HoldingsData(object):
+class HoldingsData(BaseDataClass):
     symbol: str
     average_holding: HoldingData
     holding_data: list[HoldingData]
 
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
-
 
 @dataclasses.dataclass
-class Sum(object):
+class Sum(BaseDataClass):
     crypto: Decimal = Decimal(0)
     stock: Decimal = Decimal(0)
     total: Decimal = Decimal(0)
 
-    def __getitem__(self, key):
-        return getattr(self, key)
+    def __post_init__(self):
+        self.total = self.crypto + self.stock
 
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
-
-
-@dataclasses.dataclass
-class ChangeOverview(object):
-    crypto: Change() = Change()
-    stock: Change() = Change()
-    total: Change() = Change()
+    def add_value(self, type, value):
+        if type == 'crypto':
+            self.crypto = self.crypto + value
+        if type == 'stock':
+            self.stock = self.stock + value
+        self.total = self.crypto + self.stock
 
 
 @dataclasses.dataclass
-class Overview(object):
-    capital: Sum = Sum()
-    current: Sum = Sum()
-    purchase: Sum = Sum()
-    change_purchase: ChangeOverview = ChangeOverview()
-    change_capital: ChangeOverview = ChangeOverview()
-    change_daily: ChangeOverview = ChangeOverview()
+class ChangeOverview(BaseDataClass):
+    crypto: Change = dataclasses.field(default_factory=Change)
+    stock: Change = dataclasses.field(default_factory=Change)
+    total: Change = dataclasses.field(default_factory=Change)
 
-    def __getitem__(self, key):
-        return getattr(self, key)
+
+@dataclasses.dataclass
+class Overview(BaseDataClass):
+    capital: Sum = dataclasses.field(default_factory=Sum)
+    current: Sum = dataclasses.field(default_factory=Sum)
+    purchase: Sum = dataclasses.field(default_factory=Sum)
+    change_purchase: ChangeOverview = dataclasses.field(default_factory=ChangeOverview)
+    change_capital: ChangeOverview = dataclasses.field(default_factory=ChangeOverview)
+    change_daily: ChangeOverview = dataclasses.field(default_factory=ChangeOverview)
 
     def get_change(self, change_base):
         crypto = Change(value=self.__calculateValue('crypto', change_base),
@@ -163,6 +152,22 @@ class Overview(object):
             return daily_change / (self.current[attribute] - daily_change) * 100
         return 0
 
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
+
+@dataclasses.dataclass
+class Portfolio(BaseDataClass):
+    user: str
+    currency: str
+    holdings_data: list = dataclasses.field(default_factory=list)
+    overview: Overview = dataclasses.field(default_factory=Overview)
+
+
+# History
+@dataclasses.dataclass
+class Date(BaseDataClass):
+    history_date: datetime
+    sum: Sum()
+    holdings: list = dataclasses.field(default_factory=list)
+
+# @dataclasses.dataclass
+# class History(BaseDataClass):
+#     date: list[Date] = dataclasses.field(default_factory=lambda: [])

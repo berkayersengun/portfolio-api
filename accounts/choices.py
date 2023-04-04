@@ -15,5 +15,6 @@ class HoldingType(models.TextChoices):
 
 class SnapshotHook(models.TextChoices):
     DAILY = 'daily', _('daily')
+    OVERVIEW = 'overview', _('overview')
     ON_UPDATE = 'on_update', _('on_update')
     MANUAL = 'manual', _('manual')

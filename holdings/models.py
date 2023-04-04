@@ -42,8 +42,68 @@ class Holding(models.Model):
     # Create a Asset model and save each asset data in db as template to save holding when querying asset prices
 
 
+# class Price(models.Model):
+#     purchase = models.DecimalField(validators=[MinValueValidator(0)], null=False, max_digits=20, decimal_places=8)
+#     current = models.DecimalField(validators=[MinValueValidator(0)], null=False, max_digits=20, decimal_places=8)
+#
+#     def gain(self, quantity):
+#         value = (self.current - self.purchase) * quantity
+#         return Change(value=value, percentage=self.__calculatePercentage())
+#
+#     def __calculatePercentage(self):
+#         delta = self.current - self.purchase
+#         if delta != 0:
+#             return delta / self.purchase * 100
+#         return 0
+#
+#
+# class Change(models.Model):
+#     value = models.DecimalField(validators=[MinValueValidator(0)], null=False, max_digits=20, decimal_places=8)
+#     percentage = models.DecimalField(validators=[MinValueValidator(0)], null=False, max_digits=20, decimal_places=8)
+#
+#
+# class HoldingData(models.Model):
+#     # symbol = models.CharField(null=False)
+#     # name = models.CharField(null=False)
+#     # exchange = models.CharField(null=False)
+#     quantity = models.DecimalField(validators=[MinValueValidator(0)], null=False, max_digits=20, decimal_places=8)
+#     price = models.ForeignKey(Price, models.CASCADE, null=False, related_name='+')
+#     change_24H = models.ForeignKey(Change, models.CASCADE, null=False, related_name='+')
+#     gain = models.ForeignKey(Change, models.CASCADE, null=False, related_name='+')
+#     value = models.ForeignKey(Price, models.CASCADE, null=False, related_name='+')
+#     date = models.DateTimeField(default=timezone.now)
+#     # type = models.CharField(max_length=10, choices=HoldingType.choices, null=False)
+#     currency = models.CharField(max_length=15, choices=Currency.choices, null=False)
+#
+#
+# class HoldingsData(models.Model):
+#     symbol = models.CharField(max_length=15, null=False)
+#     type = models.CharField(max_length=10, choices=HoldingType.choices, null=False)
+#     name = models.CharField(max_length=50, null=False)
+#     exchange = models.CharField(max_length=50, null=False)
+#     entities = models.ManyToManyField(HoldingData)
+#     average = models.ForeignKey(HoldingData, models.CASCADE, null=False, related_name='+')
+#
+#
+# class Overview(models.Model):
+#     pass
+#
+#
+# class Portfolio(models.Model):
+#     holdings_data = models.ManyToManyField(HoldingsData)
+#     user = models.ForeignKey(accounts.models.Account, models.CASCADE, null=False)
+#     # overview = models.ForeignKey(Overview, models.CASCADE, null=False)
+
+
 class PortfolioSnapshot(models.Model):
     user = models.ForeignKey(accounts.models.Account, models.CASCADE, null=False)
     date = models.DateTimeField(auto_now_add=True)
     snapshot_hook = models.CharField(max_length=10, choices=SnapshotHook.choices, null=False)
     portfolio = models.JSONField()
+
+
+class OverviewSnapshot(models.Model):
+    user = models.ForeignKey(accounts.models.Account, models.CASCADE, null=False)
+    date = models.DateTimeField(auto_now_add=True)
+    snapshot_hook = models.CharField(max_length=10, choices=SnapshotHook.choices, null=False)
+    overview = models.JSONField()

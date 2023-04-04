@@ -2,8 +2,17 @@ from rest_framework import serializers
 
 from accounts.choices import Currency, HoldingType, SnapshotHook
 from accounts.models import Account
-from holdings.models import Holding, Capital
+from accounts.serializers import AccountSerializer
+from holdings.constanst import DATE_TIME_FORMAT
+from holdings.models import Capital, Holding
 from services.common_utils import format_decimals
+
+
+# try:
+#     from accounts.serializers import AccountSerializer
+# except ImportError:
+#     import sys
+#     AccountSerializer = sys.modules['accounts.serializers']
 
 
 class CapitalSerializer(serializers.ModelSerializer):
@@ -18,12 +27,6 @@ class CapitalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Capital
         fields = '__all__'
-
-
-class CapitalSerializerForAccount(serializers.ModelSerializer):
-    class Meta:
-        model = Capital
-        exclude = ['user']
 
 
 class CapitalSerializerForHolding(serializers.ModelSerializer):
@@ -141,8 +144,33 @@ class SearchSerializer(serializers.Serializer):
     exchDisp = serializers.CharField()
 
 
+class PortfolioField(serializers.RelatedField):
+    def to_representation(self, value):
+        return value
+        # return json.loads(value)
+
+
 class PortfolioSnapshotSerializer(serializers.Serializer):
-    user = serializers.CharField()
-    date = serializers.DateTimeField()
+    id = serializers.IntegerField()
+    user = AccountSerializer()
+    date = serializers.DateTimeField(format=DATE_TIME_FORMAT)
     snapshot_hook = serializers.ChoiceField(choices=SnapshotHook.choices)
-    portfolio = serializers.JSONField()
+    portfolio = PortfolioField(read_only=True)
+
+
+class OverviewSnapshotSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    user = AccountSerializer()
+    date = serializers.DateTimeField(format=DATE_TIME_FORMAT)
+    snapshot_hook = serializers.ChoiceField(choices=SnapshotHook.choices)
+    overview = serializers.JSONField()
+
+
+class DateSerializer(serializers.Serializer):
+    history_date = serializers.CharField()
+    sum = SumSerializer()
+    holdings = serializers.ListSerializer(child=serializers.DictField(child=serializers.CharField()))
+
+
+class HistorySerializer(serializers.Serializer):
+    date = DateSerializer(many=True)
