@@ -1,3 +1,4 @@
+import dataclasses
 import datetime
 import json
 from _decimal import Decimal
@@ -140,7 +141,7 @@ def map_portfolio_snapshot_data1(snapshot):
     # return {'date': datetime.datetime.strftime(snapshot.date, DATE_FORMAT),'user': snapshot.user ,'overview': formatted_json}
 
 
-def map_portfolio_snapshot_data(snapshot):
+def convert_old_portfolio_snapshot_data(snapshot):
     formatted = snapshot.portfolio.split("current=Sum(")[1].split("')),")[0].replace('=Decimal(', ":").replace("'", "").replace(")", "")
     formatted = formatted.replace("crypto", '"crypto"').replace("stock", '"stock"').replace("total", '"total"')
     formatted_json = json.loads('{' + formatted + '}')
@@ -165,3 +166,27 @@ def filter_snapshot_by_date(snapshot, range):
             return snapshot.date.hour == 0  # filter data for every day at hour 00:00
         case _:  # default
             return True
+
+
+def dataclass_from_dict(klass, d):
+    try:
+        fieldtypes = {f.name: f.type for f in dataclasses.fields(klass)}
+        return klass(**{f: dataclass_from_dict(fieldtypes[f], d[f]) for f in d})
+    except:
+        return d
+
+
+def map_overview_data(snapshot, currency, conversion_rate_list):
+    if currency != snapshot.overview['currency']:
+        for k, v in snapshot.overview['current'].items():
+            snapshot.overview['current'][k] = str(float(v) * float(conversion_rate_list[snapshot.overview['currency']]))
+
+        # for k, v in snapshot.overview.items():
+        #     if 'change' in k:
+        #         for k1, v1 in v.items():
+        #             v1['value'] = str(float(v1['value']) / float(conversion_rate_list[snapshot.overview['currency']]))
+        #     if k in ['capital', 'current', 'purchase']:
+        #         for k1, v1 in v.items():
+        #             snapshot.overview[k][k1] = str(float(v1) / float(conversion_rate_list[snapshot.overview['currency']]))
+
+    return {'date': snapshot.date, 'sum': snapshot.overview['current']}

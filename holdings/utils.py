@@ -62,7 +62,7 @@ def set_holdings_data(holdings_data, holding, quote, eur_usd, user):
                                      ))
 
 
-def create_holding_data(holding_query, quote_dict, eur_usd, currency):
+def create_holding_data(holding_query, quote_dict, currency_conversion, user_currency):
     if holding_query.symbol not in quote_dict:
         quote = yahoo.quote(holding_query.symbol)[0]
         quote_dict[holding_query.symbol] = quote
@@ -72,11 +72,11 @@ def create_holding_data(holding_query, quote_dict, eur_usd, currency):
     current_price = Decimal(quote_dict[symbol]['regularMarketPrice'])
     change_24h = Decimal(quote_dict[symbol]['regularMarketChange'])
     purchase_price = holding_query.purchase_price
-    if quote_dict[symbol]['currency'] != currency:
-        current_price = current_price / eur_usd
-        change_24h = change_24h / eur_usd
-    if holding_query.currency != currency:
-        purchase_price = purchase_price / eur_usd
+    if quote_dict[symbol]['currency'] != user_currency:
+        current_price = current_price * currency_conversion
+        change_24h = change_24h * currency_conversion
+    if holding_query.currency != user_currency:
+        purchase_price = purchase_price * currency_conversion
     price = Price(purchase=purchase_price, current=current_price)
     value = Price(purchase=price.purchase * holding_query.quantity, current=price.current * holding_query.quantity)
     change = Change(value=change_24h * holding_query.quantity,
@@ -91,29 +91,42 @@ def create_holding_data(holding_query, quote_dict, eur_usd, currency):
                        value=value,
                        date=holding_query.date.strftime("%d-%b-%y, %H:%M"),
                        type=holding_query.type,
-                       currency=Currency.EUR)
+                       currency=user_currency)
+
+
+def get_conversion_rate_dict(user_currency):
+    conversion_rate_dict = {}
+    for currency in Currency.labels:
+        if user_currency != currency:
+            currency_symbol = '{}{}=X'.format(currency, user_currency)
+            rate = yahoo.quote(currency_symbol)[0]['regularMarketPrice']
+            conversion_rate_dict[currency] = rate
+    return conversion_rate_dict
+
+
+def currency_conversion(user_currency, holding_currency):
+    if user_currency != holding_currency:
+        currency_symbol = '{}{}=X'.format(holding_currency, user_currency)
+        return Decimal(yahoo.quote(currency_symbol)[0]['regularMarketPrice'])
+    return Decimal(1)
 
 
 def get_holding_data(user):
     holdings_data_dict = {}
     holding_query_set = Holding.objects.filter(user=get_id_from_db(Account, username=user.username))
-    # quotes = yahoo.quote(holding_query_set.values_list('symbol', flat=True))
     quote_dict = {}
-    eur_usd = Decimal(yahoo.quote("EURUSD=X")[0]['regularMarketPrice'])
-    # symbols = set(holding_query_set.values_list('symbol', flat=True))
     for holding_query in holding_query_set:
-        holding_data = create_holding_data(holding_query, quote_dict, eur_usd, user.currency)
-        # symbols = filter(lambda holding: holding.symbol == symbol, holdings_data)
+        conversion_rate = currency_conversion(user.currency, holding_query.currency)
+        holding_data = create_holding_data(holding_query, quote_dict, conversion_rate, user.currency)
         symbol = holding_query.symbol
         if symbol in holdings_data_dict:
             holdings_data_dict[symbol]['entities'].append(holding_data)
-            # holdings_data[symbol]['average'] = get_average_data(holdings_data[symbol])
         else:
             holdings_data_dict[holding_query.symbol] = {'symbol': symbol, 'type': holding_query.type,
                                                         'name': quote_dict[symbol]['shortName'],
                                                         'exchange': quote_dict[symbol]['fullExchangeName'],
                                                         'entities': [holding_data]}
-    set_average_data(holdings_data_dict)
+    set_average_data(holdings_data_dict, user.currency)
     return list(holdings_data_dict.values())
 
 
@@ -123,7 +136,7 @@ def get_average(data, level1, level2):
     return total_values / total_quantity
 
 
-def set_average_data(holdings_data_dict):
+def set_average_data(holdings_data_dict, user_currency):
     for symbol, holdings_data in holdings_data_dict.items():
         if len(holdings_data['entities']) == 1:
             holdings_data['average'] = holdings_data['entities'][0]
@@ -148,17 +161,7 @@ def set_average_data(holdings_data_dict):
                                                value=value,
                                                date=holdings_data['entities'][0].date,
                                                type=holdings_data['entities'][0].type,
-                                               currency=Currency.EUR)
-
-
-def getOverviewData(user):
-    capital = Capital.objects.filter(user=Account.objects.get(username=user).id)
-    if len(capital) == 0:
-        return {'crypto': 0, 'stock': 0, 'total': 0}
-    else:
-        capitalData = CapitalSerializerForAccount(capital, many=True).data[0]
-        capitalData['total'] = capital.first().crypto + capital.first().stock
-        return capitalData
+                                               currency=user_currency)
 
 
 def get_current_totals(holdings_data):
@@ -196,17 +199,18 @@ def get_overview_data(holdings_data, username):
     capital = Capital.objects.filter(user=Account.objects.get(username=username).id).first()
     # continue to work on the overview view, remove capital calculations and use purchase_price instead. but show capital in the overview
     overview = Overview()
+    overview.currency = user.currency
     if capital is None:
         overview.capital = Sum()
     else:
-        overview.capital = Sum(crypto=capital.crypto, stock=capital.stock, total=capital.stock + capital.crypto)
+        conversion_rate = currency_conversion(user.currency, capital.currency)
+        overview_capital = Sum(crypto=capital.crypto, stock=capital.stock, total=capital.stock + capital.crypto)
+        overview.capital = overview_capital.currency_conversion(conversion_rate=conversion_rate)
     overview.purchase = get_totals(holdings_data, 'purchase')
     overview.current = get_totals(holdings_data, 'current')
     overview.change_purchase = overview.get_change('purchase')  # change based on the purchase price on current value
     overview.change_capital = overview.get_change('capital')  # change based on the capital price on current value
-    overview.change_daily = overview.get_change_daily(
-        holdings_data)  # change based on the capital price on current value
-    overview.currency = user.currency
+    overview.change_daily = overview.get_change_daily(holdings_data)  # change based on the capital price on current value
     return overview
 
 
@@ -231,6 +235,8 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return str(o)
         if dataclasses.is_dataclass(o):
             return dataclasses.asdict(o)
+        if isinstance(o, str):
+            return o
         return super().default(o)
 
 

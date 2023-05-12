@@ -6,6 +6,7 @@ class Currency(models.TextChoices):
     EUR = 'EUR', _('EUR')
     USD = 'USD', _('USD')
     TRY = 'TRY', _('TRY')
+    CAD = 'CAD', _('CAD')
 
 
 class HoldingType(models.TextChoices):

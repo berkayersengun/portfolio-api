@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import requests
 
@@ -13,11 +14,13 @@ def get_host(version, function):
 
 def quote(*symbols):
     query = {'symbols': ','.join(symbols)}
-    response = requests.get(get_host(version=7, function="quote"), params=query, headers=headers)
+    response = requests.get(get_host(version=6, function="quote"), params=query, headers=headers)
     if response.ok:
         return response.json()['quoteResponse']['result']
     else:
-        raise Exception(response.reason)
+        ex = json.loads(response.text)
+        ex['detail'] = get_host(version=7, function="quote")
+        raise Exception(ex)
 
 def search(symbol):
     query = {'q': symbol}

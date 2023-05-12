@@ -101,6 +101,12 @@ class Sum(BaseDataClass):
             self.stock = self.stock + value
         self.total = self.crypto + self.stock
 
+    def currency_conversion(self, conversion_rate):
+        self.crypto = self.crypto * conversion_rate
+        self.stock = self.stock * conversion_rate
+        self.total = self.crypto + self.stock
+        return self
+
 
 @dataclasses.dataclass
 class ChangeOverview(BaseDataClass):
@@ -145,7 +151,7 @@ class Overview(BaseDataClass):
     def __calculatePercentage(self, attribute, change_base=None, daily_change=None):
         if change_base is not None:
             delta = self.__calculateValue(attribute, change_base)
-            if self[change_base][attribute] != 0:
+            if self[change_base][attribute] != 0 and delta != 0:
                 return delta / self.current[attribute] * 100
             return 0
         if daily_change is not None and daily_change != 0:
