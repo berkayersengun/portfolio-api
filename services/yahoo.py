@@ -22,10 +22,31 @@ def quote(*symbols):
         ex['detail'] = get_host(version=7, function="quote")
         raise Exception(ex)
 
+
+# alternative to quote
+def options(symbol):
+    uri = get_host(version=7, function="options")
+    uri = f"{uri}/{symbol}"
+    response = requests.get(uri, headers=headers)
+    if response.ok:
+        return response.json()['optionChain']['result'][0]['quote']
+    else:
+        ex = json.loads(response.text)
+        ex['detail'] = get_host(version=7, function="quote")
+        raise Exception(ex)
+
+
 def search(symbol):
     query = {'q': symbol}
     response = requests.get(get_host(version=1, function="search"), params=query, headers=headers)
     return response.json()['quotes']
+
+
+def chart(symbol):
+    query = {'range': '1m', 'interval': '1m'}
+    host = get_host(version=8, function="chart")
+    response = requests.get(f"{host}/{symbol}", params=query, headers=headers)
+    return response.json()['chart']['result'][0]['meta']
 
 
 HIST_PARAMS = {

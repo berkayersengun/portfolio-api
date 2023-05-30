@@ -7,14 +7,13 @@ from rest_framework.exceptions import NotFound
 
 from accounts.choices import HoldingType, Currency
 from accounts.models import Account
-from accounts.serializers import CapitalSerializerForAccount
 from holdings.dataclasses import HoldingData, Overview, Sum, Price, Change, ChangeOverview, Portfolio
 from holdings.models import Holding, Capital, PortfolioSnapshot, OverviewSnapshot
 from services import yahoo
 from services.common_utils import get_id_from_db
 
 
-def filterByUser(self):
+def filter_by_user(self):
     queryset = Holding.objects.all()
     username = self.request.query_params.get('user')
     if username is not None:
@@ -62,21 +61,19 @@ def set_holdings_data(holdings_data, holding, quote, eur_usd, user):
                                      ))
 
 
-def create_holding_data(holding_query, quote_dict, currency_conversion, user_currency):
+def create_holding_data(holding_query, quote_dict, user_currency):
     if holding_query.symbol not in quote_dict:
-        quote = yahoo.quote(holding_query.symbol)[0]
-        quote_dict[holding_query.symbol] = quote
-    # set_holdings_data(holdings_data_list, holding, quote_list[holding.symbol], eur_usd, user)
+        quote_dict[holding_query.symbol] = yahoo.options(holding_query.symbol)
+        current_currency = quote_dict[holding_query.symbol]['currency']
+        quote_dict[holding_query.symbol]['conversion_rate'] = currency_conversion(current_currency, user_currency)
     symbol = quote_dict[holding_query.symbol]['symbol']
-    # symbol = symbol.replace('.', '-')
     current_price = Decimal(quote_dict[symbol]['regularMarketPrice'])
     change_24h = Decimal(quote_dict[symbol]['regularMarketChange'])
     purchase_price = holding_query.purchase_price
-    if quote_dict[symbol]['currency'] != user_currency:
-        current_price = current_price * currency_conversion
-        change_24h = change_24h * currency_conversion
-    if holding_query.currency != user_currency:
-        purchase_price = purchase_price * currency_conversion
+    conversion_rate = quote_dict[holding_query.symbol]['conversion_rate']
+    current_price = current_price * conversion_rate
+    change_24h = change_24h * conversion_rate
+    purchase_price = purchase_price * conversion_rate
     price = Price(purchase=purchase_price, current=current_price)
     value = Price(purchase=price.purchase * holding_query.quantity, current=price.current * holding_query.quantity)
     change = Change(value=change_24h * holding_query.quantity,
@@ -98,17 +95,19 @@ def get_conversion_rate_dict(user_currency):
     conversion_rate_dict = {}
     for currency in Currency.labels:
         if user_currency != currency:
-            currency_symbol = '{}{}=X'.format(currency, user_currency)
-            rate = yahoo.quote(currency_symbol)[0]['regularMarketPrice']
-            conversion_rate_dict[currency] = rate
+            conversion_rate = currency_conversion(currency, user_currency)
+            conversion_rate_dict[currency] = conversion_rate
     return conversion_rate_dict
 
 
-def currency_conversion(user_currency, holding_currency):
-    if user_currency != holding_currency:
-        currency_symbol = '{}{}=X'.format(holding_currency, user_currency)
-        return Decimal(yahoo.quote(currency_symbol)[0]['regularMarketPrice'])
-    return Decimal(1)
+def currency_conversion(current_currency, target_currency):
+    if current_currency == target_currency:
+        return Decimal(1)
+    currency_symbol = '{}{}=X'.format(current_currency, target_currency)
+    if currency_symbol == 'TRYCAD=X':
+        currency_symbol = 'CADTRY=X'
+        return 1/Decimal(yahoo.options(currency_symbol)['regularMarketPrice'])
+    return Decimal(yahoo.options(currency_symbol)['regularMarketPrice'])
 
 
 def get_holding_data(user):
@@ -116,8 +115,7 @@ def get_holding_data(user):
     holding_query_set = Holding.objects.filter(user=get_id_from_db(Account, username=user.username))
     quote_dict = {}
     for holding_query in holding_query_set:
-        conversion_rate = currency_conversion(user.currency, holding_query.currency)
-        holding_data = create_holding_data(holding_query, quote_dict, conversion_rate, user.currency)
+        holding_data = create_holding_data(holding_query, quote_dict, user.currency)
         symbol = holding_query.symbol
         if symbol in holdings_data_dict:
             holdings_data_dict[symbol]['entities'].append(holding_data)
@@ -178,7 +176,8 @@ def get_totals(holdings_data, price_type):
             [entity['value'][price_type] for entity in holding['entities'] if entity['type'] == HoldingType.CRYPTO])
         total_stock = total_stock + sum(
             [entity['value'][price_type] for entity in holding['entities'] if entity['type'] == HoldingType.STOCK])
-    return Sum(crypto=Decimal(round(total_crypto)), stock=Decimal(round(total_stock)), total=Decimal(round(total_crypto + total_stock)))
+    return Sum(crypto=Decimal(round(total_crypto)), stock=Decimal(round(total_stock)),
+               total=Decimal(round(total_crypto + total_stock)))
 
 
 def get_change_daily(holdings_data):
@@ -203,14 +202,15 @@ def get_overview_data(holdings_data, username):
     if capital is None:
         overview.capital = Sum()
     else:
-        conversion_rate = currency_conversion(user.currency, capital.currency)
+        conversion_rate = currency_conversion(capital.currency, user.currency)
         overview_capital = Sum(crypto=capital.crypto, stock=capital.stock, total=capital.stock + capital.crypto)
         overview.capital = overview_capital.currency_conversion(conversion_rate=conversion_rate)
     overview.purchase = get_totals(holdings_data, 'purchase')
     overview.current = get_totals(holdings_data, 'current')
     overview.change_purchase = overview.get_change('purchase')  # change based on the purchase price on current value
     overview.change_capital = overview.get_change('capital')  # change based on the capital price on current value
-    overview.change_daily = overview.get_change_daily(holdings_data)  # change based on the capital price on current value
+    overview.change_daily = overview.get_change_daily(
+        holdings_data)  # change based on the capital price on current value
     return overview
 
 
@@ -252,13 +252,16 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 #         return dct
 
 def create_snapshots():
-    ports = list(filter(lambda a: a['user'] == 'sevim' or a['user'] == 'berkay', json.load(open('resources/db_backup/snapshots.json'))))
+    ports = list(filter(lambda a: a['user'] == 'sevim' or a['user'] == 'berkay',
+                        json.load(open('resources/db_backup/snapshots.json'))))
     for p in ports:
         user = Account.objects.get(username=p['user'])
-        PortfolioSnapshot.objects.create(user=user, snapshot_hook=p['snapshot_hook'], portfolio=p['portfolio'], date=p['date'])
+        PortfolioSnapshot.objects.create(user=user, snapshot_hook=p['snapshot_hook'], portfolio=p['portfolio'],
+                                         date=p['date'])
 
 
 def migrate_portfolio_snapshots():
     for snapshot in PortfolioSnapshot.objects.all():
-        OverviewSnapshot.objects.create(user=snapshot.user, snapshot_hook=snapshot.snapshot_hook, overview=snapshot.portfolio['overview'],
+        OverviewSnapshot.objects.create(user=snapshot.user, snapshot_hook=snapshot.snapshot_hook,
+                                        overview=snapshot.portfolio['overview'],
                                         date=snapshot.date)

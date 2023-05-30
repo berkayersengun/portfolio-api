@@ -52,3 +52,10 @@ def get_profile():
 def convert_timestamp_to_date(timestamp, fmt='%d-%m-%Y'):
     # return datetime.fromtimestamp(timestamp).strftime(fmt)
     return datetime.fromtimestamp(timestamp)
+
+
+def calculate_percentage(final, start):
+    delta = final - start
+    if delta != 0:
+        return delta / start * 100
+    return 0
