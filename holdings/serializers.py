@@ -79,6 +79,7 @@ class ChangeSerializer(serializers.Serializer):
 
 
 class HoldingDataSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     symbol = serializers.CharField()
     name = serializers.CharField()
     exchange = serializers.CharField()

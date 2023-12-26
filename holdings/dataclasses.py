@@ -59,6 +59,7 @@ class Price(BaseDataClass):
 
 @dataclasses.dataclass
 class HoldingData(BaseDataClass):
+    id: int
     symbol: str
     name: str
     exchange: str

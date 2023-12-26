@@ -78,7 +78,8 @@ def create_holding_data(holding_query, quote_dict, user_currency):
     value = Price(purchase=price.purchase * holding_query.quantity, current=price.current * holding_query.quantity)
     change = Change(value=change_24h * holding_query.quantity,
                     percentage=quote_dict[symbol]['regularMarketChangePercent'])
-    return HoldingData(symbol=symbol,
+    return HoldingData(id=holding_query.id,
+                       symbol=symbol,
                        name=quote_dict[symbol]['shortName'],
                        exchange=quote_dict[symbol]['fullExchangeName'],
                        quantity=holding_query.quantity,
@@ -106,7 +107,7 @@ def currency_conversion(current_currency, target_currency):
     currency_symbol = '{}{}=X'.format(current_currency, target_currency)
     if currency_symbol == 'TRYCAD=X':
         currency_symbol = 'CADTRY=X'
-        return 1/Decimal(yahoo.options(currency_symbol)['regularMarketPrice'])
+        return 1 / Decimal(yahoo.options(currency_symbol)['regularMarketPrice'])
     return Decimal(yahoo.options(currency_symbol)['regularMarketPrice'])
 
 
@@ -149,7 +150,8 @@ def set_average_data(holdings_data_dict, user_currency):
         change_24H_value = sum([entity.change_24H.value for entity in holdings_data['entities']])
         change_24H = Change(value=change_24H_value, percentage=holdings_data['entities'][0].change_24H.percentage)
 
-        holdings_data['average'] = HoldingData(symbol=symbol,
+        holdings_data['average'] = HoldingData(id=0,
+                                               symbol=symbol,
                                                name=holdings_data['entities'][0].name,
                                                exchange=holdings_data['entities'][0].exchange,
                                                quantity=quantity,
