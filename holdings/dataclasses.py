@@ -162,7 +162,7 @@ class Overview(BaseDataClass):
 
 @dataclasses.dataclass
 class Portfolio(BaseDataClass):
-    user: str
+    username: str
     currency: str
     holdings_data: list = dataclasses.field(default_factory=list)
     overview: Overview = dataclasses.field(default_factory=Overview)

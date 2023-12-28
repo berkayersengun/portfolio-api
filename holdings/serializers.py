@@ -131,7 +131,7 @@ class HoldingsDataSerializer(serializers.Serializer):
 class PortfolioSerializer(serializers.Serializer):
     holdings_data = HoldingsDataSerializer(many=True)
     overview = OverviewSerializer()
-    user = serializers.CharField()
+    username = serializers.CharField()
     currency = serializers.CharField()
 
 
