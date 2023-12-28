@@ -117,6 +117,7 @@ class HistoryList2(APIView):
 
         return Response(data=data, status=status.HTTP_200_OK)
 
+
 def getOverviewData(user):
     capital = Capital.objects.filter(user=Account.objects.get(username=user).id)
     if len(capital) == 0:
@@ -125,3 +126,51 @@ def getOverviewData(user):
         capitalData = CapitalSerializerForAccount(capital, many=True).data[0]
         capitalData['total'] = capital.first().crypto + capital.first().stock
         return capitalData
+
+
+def set_holdings_data(holdings_data, holding, quote, eur_usd, user):
+    # quantityEach = holding.quantity if holding.action == 'BUY' else -holding.quantity
+
+    current_price = Decimal(quote['regularMarketPrice'])
+    change_24h = Decimal(quote['regularMarketChange'])
+
+    if quote['currency'] != user.currency:
+        current_price = current_price / eur_usd
+        change_24h = change_24h / eur_usd
+
+    # purchase_price = holding.purchase_price if holding.currency == Holding.Currency.EUR.value else holding.purchase_price / eur_usd
+    if holding.currency != user.currency:
+        holding.purchase_price = holding.purchase_price / eur_usd
+
+    price = Price(purchase=holding.purchase_price, current=current_price)
+    value = Price(purchase=price.purchase * holding.quantity, current=price.current * holding.quantity)
+    change = Change(value=change_24h, percentage=quote['regularMarketChangePercent'])
+    holdings_data.append(HoldingData(symbol=quote['symbol'],
+                                     name=quote['shortName'],
+                                     exchange=quote['fullExchangeName'],
+                                     quantity=holding.quantity,
+                                     price=price,
+                                     gain=price.gain(holding.quantity),
+                                     change_24H=change,
+                                     value=value,
+                                     date=holding.date.strftime("%d-%b-%y, %H:%M"),
+                                     type=holding.type,
+                                     currency=Currency.CAD
+                                     ))
+
+
+def filter_by_user(self):
+    queryset = Holding.objects.all()
+    username = self.request.query_params.get('user')
+    if username is not None:
+        try:
+            account = Account.objects.get(username=username)
+        except Account.DoesNotExist:
+            availableNames = []
+            for account in Account.objects.all():
+                availableNames.append(account.username)
+            if not availableNames:
+                availableNames = ""
+            raise NotFound('User \'{0}\' not exists: {1}'.format(username, availableNames))
+        return queryset.filter(user=account.id)
+    return queryset

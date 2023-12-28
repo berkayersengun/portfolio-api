@@ -151,7 +151,7 @@ def convert_old_portfolio_snapshot_data(snapshot):
     overview.current.stock = Decimal(formatted_json.get('stock'))
     overview.current.total = Decimal(formatted_json.get('total'))
 
-    snapshot.portfolio = Portfolio(holdings_data=[], overview=overview, user=snapshot.user, currency=snapshot.user.currency)
+    snapshot.portfolio = Portfolio(holdings_data=[], overview=overview, username=snapshot.user, currency=snapshot.user.currency)
     snapshot.portfolio = formatted_json
     return PortfolioSnapshotSerializer(snapshot).data
 
@@ -189,4 +189,4 @@ def map_overview_data(snapshot, currency, conversion_rate_list):
         #         for k1, v1 in v.items():
         #             snapshot.overview[k][k1] = str(float(v1) / float(conversion_rate_list[snapshot.overview['currency']]))
 
-    return {'date': snapshot.date, 'sum': snapshot.overview['current']}
+    return {'date': snapshot.date, 'sum': snapshot.overview['current'], 'currency': currency}

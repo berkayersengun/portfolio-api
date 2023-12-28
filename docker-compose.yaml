@@ -18,6 +18,7 @@ services:
 
   backend:
     build: https://github.com/berkayersengun/portfolio-api.git#main
+    image: berkayersengun/portfolio-api-backend:1.0.0
 #    build: .
     # command: gunicorn port.wsgi:application --bind 0.0.0.0:8000
     # command: python manage.py runserver 0.0.0.0:8000
@@ -43,6 +44,7 @@ services:
 
   scheduler:
     build: https://github.com/berkayersengun/portfolio-api.git#main
+    image: berkayersengun/portfolio-api-backend:1.0.0
     entrypoint: ./docker-entrypoint-scheduler.sh
     environment:
       - POSTGRES_DB=portfolio
@@ -59,7 +61,7 @@ services:
   frontend:
     #    build: ../portfolio-ui/
     build: https://github.com/berkayersengun/portfolio-ui.git#main
-    # image: berkayersengun/portfolio-react:0.0.1
+    image: berkayersengun/portfolio-api-frontend:1.0.0
     ports:
       - "3080:80" #host:container
     #      - "3443:443"

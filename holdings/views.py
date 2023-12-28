@@ -21,7 +21,7 @@ TOTAL = 'total'
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend]  # https://stackoverflow.com/questions/54543034/how-to-filter-objects-by-slug-instead-id
     filterset_fields = '__all__'
 
 
@@ -36,21 +36,33 @@ class HoldingView(BaseModelViewSet):
     serializer_class = HoldingSerializer
 
 
+def get_currency_from_request(request):
+    if request.query_params.get("currency"):
+        currency = request.query_params.get("currency")
+    else:
+        currency = request.user.currency
+    return currency
+
+
 class PortfolioViewSet(viewsets.ReadOnlyModelViewSet):
     """
     A simple ViewSet for listing or retrieving, creating and updating projects.
     """
+    filter_backends = [DjangoFilterBackend]  # https://stackoverflow.com/questions/54543034/how-to-filter-objects-by-slug-instead-id
+    filterset_fields = '__all__'
 
     def list(self, request, **kwargs):
         datas = []
         for account in Account.objects.all():
-            portfolio = get_portfolio(account)
+            currency = get_currency_from_request(request)
+            portfolio = get_portfolio(account, currency)
             datas.append(PortfolioSerializer(portfolio).data)
         return Response(data=datas, status=status.HTTP_200_OK)
 
     def retrieve(self, request, **kwargs):
         try:
-            portfolio = get_portfolio(request.user)
+            currency = get_currency_from_request(request)
+            portfolio = get_portfolio(user=request.user, currency=currency)
             data = PortfolioSerializer(portfolio).data
             return Response(data=data, status=status.HTTP_200_OK)
         except Exception as ex:
@@ -93,8 +105,9 @@ class HistoryList(ListAPIView):
 
         overview_data = OverviewSnapshot.objects.filter(**filter_params)
         overview_data = filter(lambda snapshot: filter_snapshot_by_date(snapshot, query_range), overview_data)
-        conversion_rate_dict = get_conversion_rate_dict(request.user.currency)
-        data = list(map(lambda snapshot: map_overview_data(snapshot, request.user.currency, conversion_rate_dict), overview_data))
+        currency = get_currency_from_request(request)
+        conversion_rate_dict = get_conversion_rate_dict(currency)
+        data = list(map(lambda snapshot: map_overview_data(snapshot, currency, conversion_rate_dict), overview_data))
         data = sorted(data, key=lambda d: d['date'])
         return Response(data=data, status=status.HTTP_200_OK)
 
