@@ -25,7 +25,7 @@ def quote(*symbols):
 
 # alternative to quote
 def options(symbol):
-    uri = get_host(version=7, function="options")
+    uri = get_host(version=6, function="options")
     uri = f"{uri}/{symbol}"
     response = requests.get(uri, headers=headers)
     if response.ok:
