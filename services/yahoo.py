@@ -25,14 +25,16 @@ def quote(*symbols):
 
 # alternative to quote
 def options(symbol):
-    uri = get_host(version=6, function="options")
+    version = 6
+    func = "options"
+    uri = get_host(version=version, function=func)
     uri = f"{uri}/{symbol}"
     response = requests.get(uri, headers=headers)
     if response.ok:
         return response.json()['optionChain']['result'][0]['quote']
     else:
         ex = json.loads(response.text)
-        ex['detail'] = get_host(version=7, function="quote")
+        ex['detail'] = get_host(version=version, function=func)
         raise Exception(ex)
 
 
