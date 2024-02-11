@@ -78,8 +78,7 @@ class ChangeSerializer(serializers.Serializer):
     percentage = CustomDecimalField(read_only=True)
 
 
-class HoldingDataSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
+class HoldingDataAverageSerializer(serializers.Serializer):
     symbol = serializers.CharField()
     name = serializers.CharField()
     exchange = serializers.CharField()
@@ -91,6 +90,10 @@ class HoldingDataSerializer(serializers.Serializer):
     date = serializers.DateField()
     type = serializers.ChoiceField(choices=HoldingType.choices)
     currency = serializers.ChoiceField(choices=Currency.choices)
+
+
+class HoldingDataSerializer(HoldingDataAverageSerializer):
+    id = serializers.IntegerField()
 
 
 class SumSerializer(serializers.Serializer):
@@ -125,7 +128,7 @@ class HoldingsDataSerializer(serializers.Serializer):
     exchange = serializers.CharField()
     name = serializers.CharField()
     entities = HoldingDataSerializer(many=True)
-    average = HoldingDataSerializer()
+    average = HoldingDataAverageSerializer()
 
 
 class PortfolioSerializer(serializers.Serializer):

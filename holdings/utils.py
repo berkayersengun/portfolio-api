@@ -153,7 +153,7 @@ def get_overview_data(holdings_data, username, currency):
     if capital is None:
         overview.capital = Sum()
     else:
-        conversion_rate = currency_conversion(capital.currency, currency)
+        conversion_rate = currency_conversion(capital.user.currency, currency)
         overview_capital = Sum(crypto=capital.crypto, stock=capital.stock, total=capital.stock + capital.crypto)
         overview.capital = overview_capital.currency_conversion(conversion_rate=conversion_rate)
     overview.purchase = get_totals(holdings_data, 'purchase')

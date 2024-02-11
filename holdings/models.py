@@ -10,7 +10,6 @@ class Capital(models.Model):
     user = models.OneToOneField(accounts.models.Account, on_delete=models.CASCADE, primary_key=True, null=False)
     crypto = models.DecimalField(default=0, max_digits=20, decimal_places=8)
     stock = models.DecimalField(default=0, max_digits=20, decimal_places=8)
-    currency = models.CharField(max_length=15, choices=Currency.choices, null=False)
 
 
 class Holding(models.Model):
