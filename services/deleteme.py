@@ -174,3 +174,122 @@ def filter_by_user(self):
             raise NotFound('User \'{0}\' not exists: {1}'.format(username, availableNames))
         return queryset.filter(user=account.id)
     return queryset
+
+
+def dataclass_from_dict(klass, d):
+    try:
+        fieldtypes = {f.name: f.type for f in dataclasses.fields(klass)}
+        return klass(**{f: dataclass_from_dict(fieldtypes[f], d[f]) for f in d})
+    except:
+        return d
+
+
+def map_portfolio_snapshot_data1(snapshot):
+    # snapshot_serialized = PortfolioSnapshotSerializer(snapshot).data
+    # formatted = snapshot.portfolio.split("current=Sum(")[1].split("')),")[0].replace('=Decimal(', ":").replace("'", "").replace(")", "")
+    # formatted = formatted.replace("crypto", '"crypto"').replace("stock", '"stock"').replace("total", '"total"')
+    # stream = io.BytesIO(str.encode(snapshot.portfolio.replace("'", "\"")))
+    # data = JSONParser().parse(stream)
+
+    formatted_json = json.loads(snapshot.portfolio.replace("'", "\""), object_hook=EdgeDecoder)
+    formatted_json = dict(map(lambda val: (val[0], round(val[1])), formatted_json.items()))
+    snapshot.portfolio = formatted_json
+
+    return snapshot
+    # return {'date': datetime.datetime.strftime(snapshot.date, DATE_FORMAT),'user': snapshot.user ,'overview': formatted_json}
+
+
+def convert_old_portfolio_snapshot_data(snapshot):
+    formatted = snapshot.portfolio.split("current=Sum(")[1].split("')),")[0].replace('=Decimal(', ":").replace("'", "").replace(")", "")
+    formatted = formatted.replace("crypto", '"crypto"').replace("stock", '"stock"').replace("total", '"total"')
+    formatted_json = json.loads('{' + formatted + '}')
+    formatted_json = dict(map(lambda val: (val[0], round(val[1])), formatted_json.items()))
+    overview = Overview()
+    overview.current.crypto = Decimal(formatted_json.get('crypto'))
+    overview.current.stock = Decimal(formatted_json.get('stock'))
+    overview.current.total = Decimal(formatted_json.get('total'))
+
+    snapshot.portfolio = Portfolio(holdings_data=[], overview=overview, username=snapshot.user, currency=snapshot.user.currency)
+    snapshot.portfolio = formatted_json
+    return PortfolioSnapshotSerializer(snapshot).data
+
+
+def fill_weekends_for_stocks(hist_list):
+    temp_hist_list = hist_list.copy()
+
+    for idx, hist_entry in enumerate(hist_list):
+        friday, date = is_friday(hist_entry.history_date)
+        if friday:
+            saturday = copy(hist_entry)
+            sunday = copy(hist_entry)
+            saturday.history_date = date + datetime.timedelta(days=1)
+            sunday.history_date = date + datetime.timedelta(days=2)
+            temp_hist_list.append(saturday)
+            temp_hist_list.append(sunday)
+    for t in temp_hist_list:
+        if t is not datetime:
+            print(t)
+    return sorted(temp_hist_list, key=lambda h: h.history_date)
+
+
+
+def add_symbol_history(symbol, data, value, history_list_entry):
+    if symbol in data['history']:
+        data['history'][symbol] = data['history'][symbol] + history_list_entry['price'] * value['quantity']
+    else:
+        data['history'] = {symbol: history_list_entry['price'] * value['quantity']}
+
+def append_value(type, history_list, all):
+    for h in history_list:
+        date = datetime.datetime.strptime(h['date'], DATE_FORMAT)
+        if date in all:
+            if type in all[date]:
+                all[date][type] = h['value'] + all[date][type]
+            else:
+                all[date][type] = h['value']
+
+        else:
+            all[date] = {type: h['value']}
+
+
+def check_query_params1(query_params):
+    interval = query_params.get('interval')
+    range_query = query_params.get('range')
+    valid_ranges = [
+        "1d",
+        "5d",
+        "1mo",
+        "3mo",
+        "6mo",
+        "1y",
+        "2y",
+        "5y",
+        "10y",
+        "ytd",
+        "max"
+    ]
+    if range_query not in valid_ranges:
+        return Response(data=f"'{range_query}' is not a valid range: Valid ranges: {valid_ranges}",
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    valid_intervals = ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']
+    if interval not in valid_intervals:
+        return Response(data=f"'{interval}' is not a valid interval: Valid intervals: {valid_intervals}",
+                        status=status.HTTP_400_BAD_REQUEST)
+
+
+def add_value(history_list):
+    # history_date = datetime.datetime.strptime(history_list[0]['date'], DATA_FORMAT)  # 2022
+    # purchase_date = datetime.datetime.strptime(history_list[1]['purchase_date'], DATA_FORMAT)  # 2023
+    # if history_date > purchase_date:
+    #     history_list[0]['value'] = float(history_list[1]['quantity']) * history_list[0]['price']
+
+    # quantity = sum(holding['quantity'] for holding in history_list[1]['holdings'])
+    history_list[0]['value'] = history_list[1] * history_list[0]['price']
+    return history_list[0]
+
+
+def get_current_totals(holdings_data):
+    crypto_total = sum([holding_data.amount for holding_data in holdings_data.crypto])
+    stock_total = sum([holding_data.amount for holding_data in holdings_data.stock])
+    return Sum(crypto=crypto_total, stock=stock_total, total=crypto_total + stock_total)

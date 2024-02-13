@@ -13,8 +13,7 @@ from accounts.models import Account
 from holdings.models import Holding, Capital, PortfolioSnapshot, OverviewSnapshot
 from holdings.serializers import HoldingSerializer, PortfolioSerializer, SearchSerializer, CapitalSerializer, \
     PortfolioSnapshotSerializer, OverviewSnapshotSerializer
-from holdings.service import get_filter_params, filter_snapshot_by_date, map_overview_data
-from holdings.utils import get_portfolio, get_conversion_rate_dict
+from holdings.utils import get_portfolio, get_conversion_rate_dict, filter_snapshot_by_date, get_filter_params, map_overview_data
 from services import yahoo
 
 TOTAL = 'total'
