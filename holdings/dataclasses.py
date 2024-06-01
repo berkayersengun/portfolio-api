@@ -126,34 +126,32 @@ class Overview(BaseDataClass):
     change_daily: ChangeOverview = dataclasses.field(default_factory=ChangeOverview)
 
     def get_change(self, change_base):
-        crypto = Change(value=self.__calculateValue('crypto', change_base),
-                        percentage=self.__calculatePercentage('crypto', change_base=change_base))
-        stock = Change(value=self.__calculateValue('stock', change_base),
-                       percentage=self.__calculatePercentage('stock', change_base=change_base))
-        total = Change(value=self.__calculateValue('total', change_base),
-                       percentage=self.__calculatePercentage('total', change_base=change_base))
+        crypto = Change(value=self.__calculate_value('crypto', change_base),
+                        percentage=self.__calculate_percentage('crypto', change_base=change_base))
+        stock = Change(value=self.__calculate_value('stock', change_base),
+                       percentage=self.__calculate_percentage('stock', change_base=change_base))
+        total = Change(value=self.__calculate_value('total', change_base),
+                       percentage=self.__calculate_percentage('total', change_base=change_base))
         return ChangeOverview(crypto=crypto, stock=stock, total=total)
 
     def get_change_daily(self, holdings_data):
-        crypto_value = sum([holding['average'].change_24H.value for holding in holdings_data if
-                            holding['type'] == HoldingType.CRYPTO])
-        stock_value = sum([holding['average'].change_24H.value for holding in holdings_data if
-                           holding['type'] == HoldingType.STOCK])
+        crypto_value = sum([holding['average'].change_24H.value for holding in holdings_data if holding['type'] == HoldingType.CRYPTO])
+        stock_value = sum([holding['average'].change_24H.value for holding in holdings_data if holding['type'] == HoldingType.STOCK])
         total_value = sum([holding['average'].change_24H.value for holding in holdings_data])
 
-        crypto = Change(value=crypto_value, percentage=self.__calculatePercentage('crypto', daily_change=crypto_value))
-        stock = Change(value=stock_value, percentage=self.__calculatePercentage('stock', daily_change=stock_value))
-        total = Change(value=total_value, percentage=self.__calculatePercentage('total', daily_change=total_value))
+        crypto = Change(value=Decimal(crypto_value), percentage=self.__calculate_percentage('crypto', daily_change=crypto_value))
+        stock = Change(value=Decimal(stock_value), percentage=self.__calculate_percentage('stock', daily_change=stock_value))
+        total = Change(value=Decimal(total_value), percentage=self.__calculate_percentage('total', daily_change=total_value))
         return ChangeOverview(crypto=crypto, stock=stock, total=total)
 
-    def __calculateValue(self, attribute, change_base):
+    def __calculate_value(self, attribute, change_base):
         return self.current[attribute] - self[change_base][attribute] if self.current[attribute] != 0 else 0
 
-    def __calculatePercentage(self, attribute, change_base=None, daily_change=None):
+    def __calculate_percentage(self, attribute, change_base=None, daily_change=None):
         if change_base is not None:
-            delta = self.__calculateValue(attribute, change_base)
+            delta = self.__calculate_value(attribute, change_base)
             if self[change_base][attribute] != 0 and delta != 0:
-                return delta / self.current[attribute] * 100
+                return delta / self[change_base][attribute] * 100
             return 0
         if daily_change is not None and daily_change != 0:
             return daily_change / (self.current[attribute] - daily_change) * 100
